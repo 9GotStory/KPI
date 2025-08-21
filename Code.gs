@@ -2,13 +2,13 @@
 // Deploy this as a web app with execute permissions set to "Anyone"
 
 function doGet(e) {
-  const action = e.parameter.action || "getAllKPIData"
+  const action = e.parameter.action || "getAllIndicatorData"
   let result
 
   try {
     switch (action) {
-      case "getKPIConfiguration":
-        result = getKPIConfiguration()
+      case "getIndicatorConfiguration":
+        result = getIndicatorConfiguration()
         break
 
       case "getSourceSheetData":
@@ -16,13 +16,13 @@ function doGet(e) {
         result = getSourceSheetData(sheetName)
         break
 
-      case "getAllKPIData":
-        result = getAllKPIData()
+      case "getAllIndicatorData":
+        result = getAllIndicatorData()
         break
 
-      case "getKPIByGroup":
+      case "getIndicatorByGroup":
         const groupName = e.parameter.groupName
-        result = getKPIByGroup(groupName)
+        result = getIndicatorByGroup(groupName)
         break
 
       default:
@@ -43,7 +43,7 @@ function doGet(e) {
     .setHeader("Access-Control-Allow-Headers", "Content-Type")
 }
 
-function getKPIConfiguration() {
+function getIndicatorConfiguration() {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data")
     if (!sheet) {
@@ -68,7 +68,7 @@ function getKPIConfiguration() {
       data: configuration,
     }
   } catch (error) {
-    throw new Error(`Error getting KPI configuration: ${error.toString()}`)
+    throw new Error(`Error getting ตัวชี้วัด configuration: ${error.toString()}`)
   }
 }
 
@@ -106,10 +106,10 @@ function getSourceSheetData(sheetName) {
   }
 }
 
-function getAllKPIData() {
+function getAllIndicatorData() {
   try {
     // Get configuration from Data sheet
-    const configResult = getKPIConfiguration()
+    const configResult = getIndicatorConfiguration()
     const configuration = configResult.data
 
     // Get unique source sheets
@@ -142,17 +142,17 @@ function getAllKPIData() {
       },
     }
   } catch (error) {
-    throw new Error(`Error getting all KPI data: ${error.toString()}`)
+    throw new Error(`Error getting all ตัวชี้วัด data: ${error.toString()}`)
   }
 }
 
-function getKPIByGroup(groupName) {
+function getIndicatorByGroup(groupName) {
   try {
     if (!groupName) {
       throw new Error("Group name parameter is required")
     }
 
-    const allData = getAllKPIData()
+    const allData = getAllIndicatorData()
     const filteredConfiguration = allData.data.configuration.filter((item) => item["ประเด็นขับเคลื่อน"] === groupName)
 
     return {
@@ -165,7 +165,7 @@ function getKPIByGroup(groupName) {
       },
     }
   } catch (error) {
-    throw new Error(`Error getting KPI by group: ${error.toString()}`)
+    throw new Error(`Error getting ตัวชี้วัด by group: ${error.toString()}`)
   }
 }
 
@@ -174,10 +174,10 @@ function refreshDataCache() {
   try {
     // Clear any cached data
     const cache = CacheService.getScriptCache()
-    cache.removeAll(["kpi_configuration", "all_kpi_data"])
+    cache.removeAll(["indicator_configuration", "all_indicator_data"])
 
     // Pre-load fresh data
-    getAllKPIData()
+    getAllIndicatorData()
 
     return {
       status: "success",
