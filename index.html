@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KPI Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <header class="p-4 bg-blue-600 text-white flex justify-between">
+    <h1 class="text-xl font-semibold">KPI Dashboard</h1>
+    <div id="last-updated" class="text-sm"></div>
+  </header>
+
+  <main class="p-4 space-y-4">
+    <!-- Filter Panel -->
+    <section class="bg-white p-4 rounded shadow">
+      <div class="flex flex-wrap gap-4" id="filters"></div>
+      <button id="resetFilters" class="mt-4 px-4 py-2 bg-gray-200 rounded">Reset Filter</button>
+    </section>
+
+    <!-- KPI Group Cards -->
+    <section id="groupCards" class="grid md:grid-cols-3 gap-4"></section>
+
+    <!-- KPI Detail Table -->
+    <section class="bg-white p-4 rounded shadow">
+      <table class="min-w-full table-auto" id="detailTable">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2">ตัวชี้วัดย่อย</th>
+            <th class="p-2">หน่วยบริการ</th>
+            <th class="p-2">เป้าหมาย</th>
+            <th class="p-2">ผลงาน</th>
+            <th class="p-2">ร้อยละ</th>
+            <th class="p-2">เกณฑ์ผ่าน</th>
+            <th class="p-2">วันที่อัพเดท</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-4 rounded shadow max-h-full overflow-auto w-11/12 md:w-2/3">
+      <button id="closeModal" class="float-right text-red-500">X</button>
+      <pre id="modalContent" class="mt-4 whitespace-pre-wrap"></pre>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    let allData = null;
+
+    async function fetchAll() {
+      const res = await fetch(`${API_BASE}?action=getAllKPIData`);
+      const json = await res.json();
+      if (json.status !== 'success') {
+        console.error(json.message);
+        return;
+      }
+      allData = json.data;
+      document.getElementById('last-updated').textContent = new Date(json.timestamp).toLocaleString();
+      renderFilters();
+      renderGroupCards();
+      renderTable(allData.configuration);
+    }
+
+    function renderFilters() {
+      const filterContainer = document.getElementById('filters');
+      filterContainer.innerHTML = '';
+      const groups = allData.groups;
+      const select = document.createElement('select');
+      select.id = 'groupFilter';
+      select.className = 'p-2 border rounded';
+      select.innerHTML = `<option value="">เลือกประเด็นขับเคลื่อน</option>`;
+      groups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        select.appendChild(opt);
+      });
+      select.addEventListener('change', () => {
+        const value = select.value;
+        if (value) {
+          renderTable(allData.configuration.filter(c => c['ประเด็นขับเคลื่อน'] === value));
+        } else {
+          renderTable(allData.configuration);
+        }
+      });
+      filterContainer.appendChild(select);
+      document.getElementById('resetFilters').onclick = () => { select.value = ''; renderTable(allData.configuration); };
+    }
+
+    function renderGroupCards() {
+      const container = document.getElementById('groupCards');
+      container.innerHTML = '';
+      const grouped = {};
+      allData.configuration.forEach(item => {
+        const key = item['ประเด็นขับเคลื่อน'];
+        if (!grouped[key]) grouped[key] = { count: 0, percent: 0 };
+        grouped[key].count++;
+        grouped[key].percent += Number(item['ร้อยละ (%)'] || 0);
+      });
+      Object.entries(grouped).forEach(([group, info]) => {
+        const avg = info.percent / info.count;
+        const card = document.createElement('div');
+        card.className = `p-4 rounded shadow ${avg >= 80 ? 'bg-green-100' : 'bg-red-100'}`;
+        card.innerHTML = `<h3 class="font-semibold">${group}</h3><p>จำนวน KPI: ${info.count}</p><p>เฉลี่ย: ${avg.toFixed(2)}%</p>`;
+        container.appendChild(card);
+      });
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'odd:bg-white even:bg-gray-50 hover:bg-blue-50 cursor-pointer';
+        tr.innerHTML = `
+          <td class="p-2">${row['ตัวชี้วัดย่อย'] || ''}</td>
+          <td class="p-2">${row['ชื่อหน่วยบริการ'] || ''}</td>
+          <td class="p-2">${row['เป้าหมาย'] || ''}</td>
+          <td class="p-2">${row['ผลงาน'] || ''}</td>
+          <td class="p-2">${row['ร้อยละ (%)'] || ''}</td>
+          <td class="p-2">${row['เกณฑ์ผ่าน (%)'] || ''}</td>
+          <td class="p-2">${row['ข้อมูลวันที่'] || ''}</td>`;
+        tr.addEventListener('click', () => openModal(row));
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModal(row) {
+      const modal = document.getElementById('modal');
+      const content = document.getElementById('modalContent');
+      content.textContent = JSON.stringify(row, null, 2);
+      modal.classList.remove('hidden');
+    }
+
+    document.getElementById('closeModal').onclick = () => {
+      document.getElementById('modal').classList.add('hidden');
+    };
+
+    fetchAll();
+  </script>
+</body>
+</html>
