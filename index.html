@@ -948,39 +948,56 @@
 
         // Create KPI info content
         function createKPIInfoContent(data) {
-            if (!data || data.length === 0) {
+            if (!data || Object.keys(data).length === 0) {
                 return '<div class="text-center py-8 text-gray-500">ไม่มีข้อมูล</div>';
             }
 
-            return data.map(item => {
-                const listItems = ['รายการข้อมูล_1','รายการข้อมูล_2','รายการข้อมูล_3','รายการข้อมูล_4','รายการข้อมูล_5']
-                    .map(key => item[key])
-                    .filter(text => text && text.trim() !== '')
-                    .map(text => `<li class="list-disc ml-6">${text}</li>`)
-                    .join('');
+            return Object.entries(data).map(([main, subMap]) => {
+                const subHtml = Object.entries(subMap).map(([sub, targetMap]) => {
+                    const targetHtml = Object.entries(targetMap).map(([target, item]) => {
+                        const listItems = ['รายการข้อมูล_1','รายการข้อมูล_2','รายการข้อมูล_3','รายการข้อมูล_4','รายการข้อมูล_5']
+                            .map(key => item[key])
+                            .filter(text => text && text.trim() !== '')
+                            .map(text => `<li class="list-disc ml-6">${text}</li>`)
+                            .join('');
 
-                const reference = item['แหล่งอ้างอิง'] ? `<a href="${item['แหล่งอ้างอิง']}" target="_blank" class="text-blue-600 underline">${item['แหล่งอ้างอิง']}</a>` : '-';
+                        const reference = item['แหล่งอ้างอิง'] ? `<a href="${item['แหล่งอ้างอิง']}" target="_blank" class="text-blue-600 underline">${item['แหล่งอ้างอิง']}</a>` : '-';
+
+                        return `
+                            <div class="ml-6 mb-4">
+                                <h6 class="font-medium text-gray-700">${target}</h6>
+                                <div class="space-y-2 text-sm text-gray-700">
+                                    <div><span class="font-medium">คำนิยาม:</span> ${item['คำนิยาม'] || '-'}</div>
+                                    <div><span class="font-medium">เกณฑ์เป้าหมาย:</span> ${item['เกณฑ์เป้าหมาย'] || '-'}</div>
+                                    <div><span class="font-medium">ประชากรกลุ่มเป้าหมาย:</span> ${item['ประชากรกลุ่มเป้าหมาย'] || '-'}</div>
+                                    <div><span class="font-medium">วิธีการจัดเก็บข้อมูล:</span> ${item['วิธีการจัดเก็บข้อมูล'] || '-'}</div>
+                                    <div><span class="font-medium">แหล่งข้อมูล:</span> ${item['แหล่งข้อมูล'] || '-'}</div>
+                                    ${listItems ? `<div><span class="font-medium">รายการข้อมูล:</span><ul class="mt-1">${listItems}</ul></div>` : ''}
+                                    <div><span class="font-medium">สูตรการคำนวณ:</span> ${item['สูตรการคำนวณ'] || '-'}</div>
+                                    <div><span class="font-medium">เอกสารสนับสนุน:</span> ${item['เอกสารสนับสนุน'] || '-'}</div>
+                                </div>
+                                <div class="mt-4 space-y-1 text-sm text-gray-700">
+                                    <div><span class="font-medium">หน่วยงานรับผิดชอบ:</span> ${item['หน่วยงานรับผิดชอบ'] || '-'}</div>
+                                    <div><span class="font-medium">ผู้ประสานงาน:</span> ${item['ผู้ประสานงาน'] || '-'}</div>
+                                    <div><span class="font-medium">แหล่งอ้างอิง:</span> ${reference}</div>
+                                    <div><span class="font-medium">หมายเหตุ:</span> ${item['หมายเหตุ'] || '-'}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="ml-4 mb-6">
+                            <h5 class="font-medium text-gray-800 mb-2">${sub}</h5>
+                            ${targetHtml}
+                        </div>
+                    `;
+                }).join('');
 
                 return `
                     <div class="mb-8">
-                        <h4 class="font-semibold text-lg text-gray-900 mb-1">${item['ตัวชี้วัดหลัก'] || '-'}</h4>
-                        <p class="text-sm text-gray-700 mb-4">${item['ตัวชี้วัดย่อย'] || '-'}</p>
-                        <div class="space-y-2 text-sm text-gray-700">
-                            <div><span class="font-medium">คำนิยาม:</span> ${item['คำนิยาม'] || '-'}</div>
-                            <div><span class="font-medium">เกณฑ์เป้าหมาย:</span> ${item['เกณฑ์เป้าหมาย'] || '-'}</div>
-                            <div><span class="font-medium">ประชากรกลุ่มเป้าหมาย:</span> ${item['ประชากรกลุ่มเป้าหมาย'] || '-'}</div>
-                            <div><span class="font-medium">วิธีการจัดเก็บข้อมูล:</span> ${item['วิธีการจัดเก็บข้อมูล'] || '-'}</div>
-                            <div><span class="font-medium">แหล่งข้อมูล:</span> ${item['แหล่งข้อมูล'] || '-'}</div>
-                            ${listItems ? `<div><span class="font-medium">รายการข้อมูล:</span><ul class="mt-1">${listItems}</ul></div>` : ''}
-                            <div><span class="font-medium">สูตรการคำนวณ:</span> ${item['สูตรการคำนวณ'] || '-'}</div>
-                            <div><span class="font-medium">เอกสารสนับสนุน:</span> ${item['เอกสารสนับสนุน'] || '-'}</div>
-                        </div>
-                        <div class="mt-4 space-y-1 text-sm text-gray-700">
-                            <div><span class="font-medium">หน่วยงานรับผิดชอบ:</span> ${item['หน่วยงานรับผิดชอบ'] || '-'}</div>
-                            <div><span class="font-medium">ผู้ประสานงาน:</span> ${item['ผู้ประสานงาน'] || '-'}</div>
-                            <div><span class="font-medium">แหล่งอ้างอิง:</span> ${reference}</div>
-                            <div><span class="font-medium">หมายเหตุ:</span> ${item['หมายเหตุ'] || '-'}</div>
-                        </div>
+                        <h4 class="font-semibold text-lg text-gray-900 mb-2">${main}</h4>
+                        ${subHtml}
                     </div>
                 `;
             }).join('');

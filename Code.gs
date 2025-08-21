@@ -303,22 +303,36 @@ function getKPIInfoByGroup(groupName) {
 
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) {
-      return [];
+      return {};
     }
 
     const headers = data[0];
     const rows = data.slice(1);
 
-    const info = rows.map(row => {
-      const record = {};
-      headers.forEach((header, index) => {
-        record[header] = row[index] || '';
-      });
-      return record;
-    }).filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
+    const info = rows
+      .map(row => {
+        const record = {};
+        headers.forEach((header, index) => {
+          record[header] = row[index] || '';
+        });
+        return record;
+      })
+      .filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
 
-    setCachedData(cacheKey, info);
-    return info;
+    // จัดกลุ่มข้อมูลตามตัวชี้วัดหลัก > ตัวชี้วัดย่อย > กลุ่มเป้าหมาย
+    const grouped = {};
+    info.forEach(item => {
+      const main = item['ตัวชี้วัดหลัก'] || '-';
+      const sub = item['ตัวชี้วัดย่อย'] || '-';
+      const target = item['กลุ่มเป้าหมาย'] || '-';
+
+      if (!grouped[main]) grouped[main] = {};
+      if (!grouped[main][sub]) grouped[main][sub] = {};
+      grouped[main][sub][target] = item;
+    });
+
+    setCachedData(cacheKey, grouped);
+    return grouped;
 
   } catch (error) {
     Logger.log('Error in getKPIInfoByGroup: ' + error.toString());
