@@ -589,7 +589,7 @@
                         }
                     }
                     
-                    content.innerHTML = createSourceDataTable(filteredSourceData);
+                    content.innerHTML = createSourceDataContent(filteredSourceData);
                 } else {
                     content.innerHTML = `<div class="text-center py-8 text-red-600">เกิดข้อผิดพลาด: ${result.message}</div>`;
                 }
@@ -600,44 +600,55 @@
             }
         }
 
-        // Create source data table
-        function createSourceDataTable(data) {
+        // Create source data content with summary
+        function createSourceDataContent(data) {
             if (!data || data.length === 0) {
                 return '<div class="text-center py-8 text-gray-500">ไม่มีข้อมูล</div>';
             }
-            
-            const headers = Object.keys(data[0]);
-            
+
+            const allHeaders = Object.keys(data[0]);
+            const summaryFields = ['รหัสหน่วยบริการ','ชื่อหน่วยบริการ','รหัสพื้นที่','วันที่รายงาน','ปีงบประมาณ'];
+
+            const summaryHtml = summaryFields
+                .filter(field => field in data[0])
+                .map(field => `<div><span class="font-medium">${field}:</span> ${data[0][field] || '-'}</div>`)
+                .join('');
+
+            const tableHeaders = allHeaders.filter(h => !summaryFields.includes(h));
+
             let html = `
+                <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    ${summaryHtml}
+                </div>
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
             `;
-            
-            headers.forEach(header => {
+
+            tableHeaders.forEach(header => {
                 html += `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>`;
             });
-            
+
             html += `
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
             `;
-            
+
             data.forEach(row => {
                 html += '<tr class="hover:bg-gray-50">';
-                headers.forEach(header => {
+                tableHeaders.forEach(header => {
                     const value = row[header] || '-';
                     html += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${value}</td>`;
                 });
                 html += '</tr>';
             });
-            
+
             html += `
                     </tbody>
                 </table>
             `;
-            
+
             return html;
         }
 
