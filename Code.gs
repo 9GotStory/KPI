@@ -319,7 +319,6 @@ function getKPIInfoByGroup(groupName) {
       })
       .filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
 
-    // จัดกลุ่มข้อมูลตามตัวชี้วัดหลัก > ตัวชี้วัดย่อย > กลุ่มเป้าหมาย
     const grouped = {};
     info.forEach(item => {
       const main = item['ตัวชี้วัดหลัก'] || '-';
@@ -328,7 +327,9 @@ function getKPIInfoByGroup(groupName) {
 
       if (!grouped[main]) grouped[main] = {};
       if (!grouped[main][sub]) grouped[main][sub] = {};
-      grouped[main][sub][target] = item;
+      if (!grouped[main][sub][target]) grouped[main][sub][target] = [];
+      grouped[main][sub][target].push(item);
+
     });
 
     setCachedData(cacheKey, grouped);

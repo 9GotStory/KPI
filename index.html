@@ -954,19 +954,21 @@
 
             return Object.entries(data).map(([main, subMap]) => {
                 const subHtml = Object.entries(subMap).map(([sub, targetMap]) => {
-                    const targetHtml = Object.entries(targetMap).map(([target, item]) => {
-                        const listItems = ['รายการข้อมูล_1','รายการข้อมูล_2','รายการข้อมูล_3','รายการข้อมูล_4','รายการข้อมูล_5']
-                            .map(key => item[key])
-                            .filter(text => text && text.trim() !== '')
-                            .map(text => `<li class="list-disc ml-6">${text}</li>`)
-                            .join('');
+                    const targetHtml = Object.entries(targetMap).map(([target, items]) => {
+                        const itemHtml = items.map(item => {
+                            const listItems = ['รายการข้อมูล_1','รายการข้อมูล_2','รายการข้อมูล_3','รายการข้อมูล_4','รายการข้อมูล_5']
+                                .map(key => item[key])
+                                .filter(text => text && text.trim() !== '')
+                                .map(text => `<li class="list-disc ml-6">${text}</li>`)
+                                .join('');
+
 
                         const reference = item['แหล่งอ้างอิง'] ? `<a href="${item['แหล่งอ้างอิง']}" target="_blank" class="text-blue-600 underline">${item['แหล่งอ้างอิง']}</a>` : '-';
 
                         return `
-                            <div class="ml-6 mb-4">
-                                <h6 class="font-medium text-gray-700">${target}</h6>
-                                <div class="space-y-2 text-sm text-gray-700">
+
+                            <div class="ml-6 mt-2 mb-4 text-sm text-gray-700">
+                                <div class="space-y-2">
                                     <div><span class="font-medium">คำนิยาม:</span> ${item['คำนิยาม'] || '-'}</div>
                                     <div><span class="font-medium">เกณฑ์เป้าหมาย:</span> ${item['เกณฑ์เป้าหมาย'] || '-'}</div>
                                     <div><span class="font-medium">ประชากรกลุ่มเป้าหมาย:</span> ${item['ประชากรกลุ่มเป้าหมาย'] || '-'}</div>
@@ -976,7 +978,8 @@
                                     <div><span class="font-medium">สูตรการคำนวณ:</span> ${item['สูตรการคำนวณ'] || '-'}</div>
                                     <div><span class="font-medium">เอกสารสนับสนุน:</span> ${item['เอกสารสนับสนุน'] || '-'}</div>
                                 </div>
-                                <div class="mt-4 space-y-1 text-sm text-gray-700">
+
+                                <div class="mt-4 space-y-1">
                                     <div><span class="font-medium">หน่วยงานรับผิดชอบ:</span> ${item['หน่วยงานรับผิดชอบ'] || '-'}</div>
                                     <div><span class="font-medium">ผู้ประสานงาน:</span> ${item['ผู้ประสานงาน'] || '-'}</div>
                                     <div><span class="font-medium">แหล่งอ้างอิง:</span> ${reference}</div>
@@ -984,22 +987,17 @@
                                 </div>
                             </div>
                         `;
+
+                        }).join('');
+
+                        return `<details class="ml-6 mb-3"><summary class="cursor-pointer text-gray-700">${target}</summary>${itemHtml}</details>`;
                     }).join('');
 
-                    return `
-                        <div class="ml-4 mb-6">
-                            <h5 class="font-medium text-gray-800 mb-2">${sub}</h5>
-                            ${targetHtml}
-                        </div>
-                    `;
+                    return `<details class="ml-4 mb-4"><summary class="cursor-pointer font-medium text-gray-800">${sub}</summary>${targetHtml}</details>`;
                 }).join('');
 
-                return `
-                    <div class="mb-8">
-                        <h4 class="font-semibold text-lg text-gray-900 mb-2">${main}</h4>
-                        ${subHtml}
-                    </div>
-                `;
+                return `<details class="mb-6"><summary class="cursor-pointer font-semibold text-lg text-gray-900">${main}</summary>${subHtml}</details>`;
+
             }).join('');
         }
 
