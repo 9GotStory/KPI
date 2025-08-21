@@ -1,8 +1,8 @@
-# ระบบ KPI Dashboard สำหรับหน่วยบริการสาธารณสุข
+# ระบบ Dashboard ตัวชี้วัด สำหรับหน่วยบริการสาธารณสุข
 
 ## ภาพรวมโครงการ
 
-ระบบ KPI Dashboard นี้ถูกพัฒนาขึ้นเพื่อรวบรวมและแสดงผลตัวชี้วัดสำคัญ (Key Performance Indicators) สำหรับหน่วยบริการสาธารณสุข โดยใช้ Google Sheets เป็นฐานข้อมูลหลัก, Google Apps Script เป็น API backend, และ HTML + Tailwind CSS เป็น frontend
+ระบบ Dashboard ตัวชี้วัดนี้ถูกพัฒนาขึ้นเพื่อรวบรวมและแสดงผลตัวชี้วัดสำคัญ (Key Performance Indicators) สำหรับหน่วยบริการสาธารณสุข โดยใช้ Google Sheets เป็นฐานข้อมูลหลัก, Google Apps Script เป็น API backend, และ HTML + Tailwind CSS เป็น frontend
 
 ## คุณสมบัติหลัก
 
@@ -32,7 +32,7 @@
 ## โครงสร้างไฟล์
 
 \`\`\`
-kpi-dashboard/
+indicator-dashboard/
 ├── index.html          # หน้าเว็บหลัก
 ├── dashboard.js        # JavaScript สำหรับ frontend
 ├── apps-script.js      # Google Apps Script backend
@@ -75,10 +75,10 @@ kpi-dashboard/
 
 ### 3. ตั้งค่า Frontend
 
-1. แก้ไข URL ใน `dashboard.js` ให้ชี้ไปยัง Google Apps Script Web App ของคุณ
-2. อัพโหลดไฟล์ `index.html` และ `dashboard.js` ไปยัง web server
+1. แก้ไข URL ใน `index.html` ให้ชี้ไปยัง Google Apps Script Web App ของคุณ
+2. อัพโหลดไฟล์ `index.html` ไปยัง web server
 3. เปิดใช้งานผ่าน web browser
-4. หากพบปัญหา CORS ในระหว่างการพัฒนา ระบบจะเรียก API ผ่านตัวกลางที่ `https://cors.isomorphic-git.org/` คุณสามารถเปลี่ยนหรือลบ URL นี้ได้ใน `dashboard.js` เมื่อใช้งานจริง
+4. ระบบใช้ JSONP สำหรับเรียก API ทำให้สามารถใช้งานได้โดยไม่ติดปัญหา CORS
 
 ## การใช้งาน
 
@@ -100,10 +100,10 @@ kpi-dashboard/
 
 ### Google Apps Script Web App รองรับ actions ดังนี้:
 
-- `?action=getAllKPIData` - ดึงข้อมูลทั้งหมด
-- `?action=getKPIConfiguration` - ดึงการตั้งค่าจาก Sheet[Data]
+- `?action=getAllIndicatorData` - ดึงข้อมูลทั้งหมด
+- `?action=getIndicatorConfiguration` - ดึงการตั้งค่าจาก Sheet[Data]
 - `?action=getSourceSheetData&sheetName=ชื่อsheet` - ดึงข้อมูลจาก sheet เฉพาะ
-- `?action=getKPIByGroup&groupName=ชื่อกลุ่ม` - ดึงข้อมูลตามประเด็นขับเคลื่อน
+- `?action=getIndicatorByGroup&groupName=ชื่อกลุ่ม` - ดึงข้อมูลตามประเด็นขับเคลื่อน
 
 ## ตัวอย่างข้อมูล
 

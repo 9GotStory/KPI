@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPI Dashboard - ระบบติดตามตัวชี้วัด</title>
+    <title>Dashboard ตัวชี้วัด - ระบบติดตามตัวชี้วัด</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -39,7 +39,7 @@
                         <i data-lucide="bar-chart-3" class="text-white w-6 h-6"></i>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">KPI Dashboard</h1>
+                        <h1 class="text-2xl font-bold text-gray-900">Dashboard ตัวชี้วัด</h1>
                         <p class="text-sm text-gray-600">ระบบติดตามตัวชี้วัดหน่วยบริการสาธารณสุข</p>
                     </div>
                 </div>
@@ -85,8 +85,8 @@
                 <div class="bg-white rounded-lg shadow-sm p-6 card-hover">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600">KPI ทั้งหมด</p>
-                            <p id="totalKPIs" class="text-2xl font-bold text-gray-900">0</p>
+                            <p class="text-sm text-gray-600">ตัวชี้วัดทั้งหมด</p>
+                            <p id="totalIndicators" class="text-2xl font-bold text-gray-900">0</p>
                         </div>
                         <div class="p-3 bg-blue-100 rounded-full">
                             <i data-lucide="target" class="text-blue-600 w-6 h-6"></i>
@@ -110,7 +110,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-600">ผ่านเกณฑ์</p>
-                            <p id="passedKPIs" class="text-2xl font-bold text-green-600">0</p>
+                            <p id="passedIndicators" class="text-2xl font-bold text-green-600">0</p>
                         </div>
                         <div class="p-3 bg-green-100 rounded-full">
                             <i data-lucide="check-circle" class="text-green-600 w-6 h-6"></i>
@@ -122,7 +122,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-600">ไม่ผ่านเกณฑ์</p>
-                            <p id="failedKPIs" class="text-2xl font-bold text-red-600">0</p>
+                            <p id="failedIndicators" class="text-2xl font-bold text-red-600">0</p>
                         </div>
                         <div class="p-3 bg-red-100 rounded-full">
                             <i data-lucide="x-circle" class="text-red-600 w-6 h-6"></i>
@@ -180,16 +180,16 @@
                 </div>
             </div>
 
-            <!-- KPI Group Cards -->
-            <div id="kpiGroups" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- การ์ดกลุ่มตัวชี้วัด -->
+            <div id="indicatorGroups" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <!-- Group cards will be inserted here -->
             </div>
 
-            <!-- KPI Detail Table -->
+            <!-- ตารางรายละเอียดตัวชี้วัด -->
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4 md:mb-0">รายละเอียด KPI</h2>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4 md:mb-0">รายละเอียดตัวชี้วัด</h2>
                         <div class="flex items-center space-x-4">
                             <span id="tableResultCount" class="text-sm text-gray-600">แสดง 0 รายการ</span>
                             <select id="tableSortBy" class="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -200,13 +200,14 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ประเด็นขับเคลื่อน</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ตัวชี้วัดย่อย</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัสพื้นที่</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หน่วยบริการ</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">กลุ่มเป้าหมาย</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เป้าหมาย</th>
@@ -215,7 +216,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ข้อมูล</th>
                             </tr>
                         </thead>
-                        <tbody id="kpiTableBody" class="bg-white divide-y divide-gray-200">
+                        <tbody id="indicatorTableBody" class="bg-white divide-y divide-gray-200">
                             <!-- Table rows will be inserted here -->
                         </tbody>
                     </table>
@@ -227,7 +228,10 @@
                         <button id="prevPage" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                             ก่อนหน้า
                         </button>
-                        <span id="pageInfo" class="text-sm text-gray-700">หน้า 1 จาก 1</span>
+                        <div class="flex items-center space-x-2">
+                            <div id="pageNumbers" class="flex items-center space-x-1"></div>
+                            <span id="pageInfo" class="text-sm text-gray-700"></span>
+                        </div>
                         <button id="nextPage" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                             ถัดไป
                         </button>
@@ -262,14 +266,37 @@
 
     <script>
         // Global variables
-        let kpiData = null;
+        let indicatorData = null;
         let filteredData = [];
         let currentPage = 1;
         const itemsPerPage = 10;
         
         // Configuration - Replace with your actual Google Apps Script URL
         const API_URL = 'https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec';
-        
+
+        function fetchJSONP(url) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'jsonp_cb_' + Math.random().toString(36).substring(2);
+                const script = document.createElement('script');
+                script.src = `${url}&callback=${callbackName}`;
+                script.async = true;
+
+                window[callbackName] = (data) => {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    resolve(data);
+                };
+
+                script.onerror = () => {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    reject(new Error('JSONP request failed'));
+                };
+
+                document.body.appendChild(script);
+            });
+        }
+
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             initializeLucideIcons();
@@ -342,12 +369,11 @@
             hideError();
 
             try {
-                const response = await fetch(`${API_URL}?action=getAllKPIData`);
-                const result = await response.json();
+                const result = await fetchJSONP(`${API_URL}?action=getAllIndicatorData`);
 
                 if (result.status === 'success') {
-                    kpiData = result.data;
-                    kpiData.configuration = removeDuplicateKPIs(kpiData.configuration);
+                    indicatorData = result.data;
+                    indicatorData.configuration = removeDuplicateIndicators(indicatorData.configuration);
                     updateDashboard();
                     showDashboard();
                 } else {
@@ -361,12 +387,12 @@
 
         // Calculate summary statistics for given data
         function calculateSummary(data) {
-            const uniqueData = getUniqueKPIs(data);
+            const uniqueData = getUniqueIndicators(data);
             const summary = {
-                totalKPIs: uniqueData.length,
+                totalIndicators: uniqueData.length,
                 averagePercentage: 0,
-                passedKPIs: 0,
-                failedKPIs: 0
+                passedIndicators: 0,
+                failedIndicators: 0
             };
 
             let percentageSum = 0;
@@ -379,9 +405,9 @@
                 const percentage = target > 0 ? (performance / target) * 100 : 0;
                 percentageSum += percentage;
                 if (percentage >= threshold) {
-                    summary.passedKPIs++;
+                    summary.passedIndicators++;
                 } else {
-                    summary.failedKPIs++;
+                    summary.failedIndicators++;
                 }
             });
 
@@ -391,10 +417,10 @@
 
         // Update dashboard with loaded data
         function updateDashboard() {
-            if (!kpiData) return;
+            if (!indicatorData) return;
 
             // Initialize filtered data and summary stats
-            filteredData = [...kpiData.configuration];
+            filteredData = [...indicatorData.configuration];
             updateSummaryStats(filteredData);
 
             // Populate filters
@@ -414,10 +440,10 @@
         function updateSummaryStats(data) {
             const summary = calculateSummary(data);
 
-            document.getElementById('totalKPIs').textContent = summary.totalKPIs.toLocaleString();
+            document.getElementById('totalIndicators').textContent = summary.totalIndicators.toLocaleString();
             document.getElementById('averagePercentage').textContent = summary.averagePercentage + '%';
-            document.getElementById('passedKPIs').textContent = summary.passedKPIs.toLocaleString();
-            document.getElementById('failedKPIs').textContent = summary.failedKPIs.toLocaleString();
+            document.getElementById('passedIndicators').textContent = summary.passedIndicators.toLocaleString();
+            document.getElementById('failedIndicators').textContent = summary.failedIndicators.toLocaleString();
         }
 
         // Populate filter dropdowns
@@ -434,7 +460,7 @@
                 .sort((a, b) => a.toString().localeCompare(b.toString(), 'th'));
         }
 
-        function getUniqueKPIs(data) {
+        function getUniqueIndicators(data) {
             const keyFields = ['ประเด็นขับเคลื่อน','ตัวชี้วัดหลัก','ตัวชี้วัดย่อย','กลุ่มเป้าหมาย'];
             const seen = new Set();
             return data.filter(item => {
@@ -445,7 +471,7 @@
             });
         }
 
-        function removeDuplicateKPIs(data) {
+        function removeDuplicateIndicators(data) {
             const keyFields = ['ประเด็นขับเคลื่อน','กลุ่มงานย่อย','ตัวชี้วัดหลัก','ตัวชี้วัดย่อย','กลุ่มเป้าหมาย','ชื่อหน่วยบริการ'];
             const seen = new Set();
             return data.filter(item => {
@@ -459,7 +485,7 @@
         function populateServiceFilter() {
             const select = document.getElementById('serviceFilter');
             select.innerHTML = '<option value="">ทั้งหมด</option>';
-            uniqueValues(kpiData.configuration, 'ชื่อหน่วยบริการ').forEach(val => {
+            uniqueValues(indicatorData.configuration, 'ชื่อหน่วยบริการ').forEach(val => {
                 const opt = document.createElement('option');
                 opt.value = val;
                 opt.textContent = val;
@@ -470,7 +496,7 @@
         function populateGroupFilter() {
             const select = document.getElementById('groupFilter');
             const service = document.getElementById('serviceFilter').value;
-            let data = kpiData.configuration;
+            let data = indicatorData.configuration;
             if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
             select.innerHTML = '<option value="">ทั้งหมด</option>';
             uniqueValues(data, 'ประเด็นขับเคลื่อน').forEach(val => {
@@ -489,7 +515,7 @@
             const select = document.getElementById('mainFilter');
             const service = document.getElementById('serviceFilter').value;
             const group = document.getElementById('groupFilter').value;
-            let data = kpiData.configuration;
+            let data = indicatorData.configuration;
             if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
             if (group) data = data.filter(item => item['ประเด็นขับเคลื่อน'] === group);
             select.innerHTML = '<option value="">ทั้งหมด</option>';
@@ -509,7 +535,7 @@
             const service = document.getElementById('serviceFilter').value;
             const group = document.getElementById('groupFilter').value;
             const main = document.getElementById('mainFilter').value;
-            let data = kpiData.configuration;
+            let data = indicatorData.configuration;
             if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
             if (group) data = data.filter(item => item['ประเด็นขับเคลื่อน'] === group);
             if (main) data = data.filter(item => item['ตัวชี้วัดหลัก'] === main);
@@ -531,7 +557,7 @@
             const group = document.getElementById('groupFilter').value;
             const main = document.getElementById('mainFilter').value;
             const sub = document.getElementById('subFilter').value;
-            let data = kpiData.configuration;
+            let data = indicatorData.configuration;
             if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
             if (group) data = data.filter(item => item['ประเด็นขับเคลื่อน'] === group);
             if (main) data = data.filter(item => item['ตัวชี้วัดหลัก'] === main);
@@ -550,11 +576,11 @@
 
         // Create group cards dynamically from data
         function createGroupCards(data) {
-            const container = document.getElementById('kpiGroups');
+            const container = document.getElementById('indicatorGroups');
             container.innerHTML = '';
 
             const stats = {};
-            const uniqueData = getUniqueKPIs(data);
+            const uniqueData = getUniqueIndicators(data);
             uniqueData.forEach(item => {
                 const groupName = item['ประเด็นขับเคลื่อน'] || 'ไม่ระบุ';
                 const target = parseFloat(item['เป้าหมาย']) || 0;
@@ -613,7 +639,7 @@
                     
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">จำนวน KPI</span>
+                            <span class="text-sm text-gray-600">จำนวนตัวชี้วัด</span>
                             <span class="font-semibold">${stats.count}</span>
                         </div>
                         
@@ -700,7 +726,7 @@
             const sub = document.getElementById('subFilter').value;
             const target = document.getElementById('targetFilter').value;
 
-            filteredData = kpiData.configuration.filter(item => {
+            filteredData = indicatorData.configuration.filter(item => {
                 if (service && item['ชื่อหน่วยบริการ'] !== service) return false;
                 if (group && item['ประเด็นขับเคลื่อน'] !== group) return false;
                 if (main && item['ตัวชี้วัดหลัก'] !== main) return false;
@@ -755,7 +781,7 @@
 
         // Update table
         function updateTable() {
-            const tbody = document.getElementById('kpiTableBody');
+            const tbody = document.getElementById('indicatorTableBody');
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const pageData = filteredData.slice(startIndex, endIndex);
@@ -785,6 +811,7 @@
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item['ประเด็นขับเคลื่อน'] || '-'}</td>
                 <td class="px-6 py-4 text-sm text-gray-900">${item['ตัวชี้วัดย่อย'] || '-'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item['รหัสพื้นที่'] || '-'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item['ชื่อหน่วยบริการ'] || '-'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item['กลุ่มเป้าหมาย'] || '-'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatNumber(item['เป้าหมาย'])}</td>
@@ -823,9 +850,8 @@
                 content.innerHTML = '<div class="flex justify-center py-8"><div class="loading-spinner w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full"></div></div>';
                 modal.classList.remove('hidden');
                 
-                const response = await fetch(`${API_URL}?action=getSourceSheetData&param=${encodeURIComponent(sheetName)}`);
-                const result = await response.json();
-                
+                const result = await fetchJSONP(`${API_URL}?action=getSourceSheetData&sheetName=${encodeURIComponent(sheetName)}`);
+
                 if (result.status === 'success') {
                     const sourceData = result.data;
                     let filteredSourceData = sourceData;
@@ -861,7 +887,7 @@
             }
 
             const allHeaders = Object.keys(data[0]);
-            const summaryFields = ['วันที่ประมวลผล','รหัสหน่วยบริการ','ชื่อหน่วยบริการ','วันที่รายงาน','ปีงบประมาณ','รหัสพื้นที่'];
+            const summaryFields = ['วันที่ประมวลผล','รหัสหน่วยบริการ','ชื่อหน่วยบริการ','วันที่รายงาน','ปีงบประมาณ'];
 
             const summaryHtml = summaryFields
                 .filter(field => field in data[0])
@@ -917,10 +943,23 @@
             const prevBtn = document.getElementById('prevPage');
             const nextBtn = document.getElementById('nextPage');
             const pageInfo = document.getElementById('pageInfo');
-            
+            const pageNumbers = document.getElementById('pageNumbers');
+
             prevBtn.disabled = currentPage <= 1;
             nextBtn.disabled = currentPage >= totalPages;
             pageInfo.textContent = `หน้า ${currentPage} จาก ${totalPages}`;
+
+            pageNumbers.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = `px-3 py-1 rounded-lg ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`;
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    updateTable();
+                });
+                pageNumbers.appendChild(btn);
+            }
         }
 
         // Change page
