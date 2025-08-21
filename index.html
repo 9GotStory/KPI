@@ -264,6 +264,21 @@
         </div>
     </div>
 
+    <!-- KPI Info Modal -->
+    <div id="kpiInfoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-[calc(100vw-4rem)] max-w-3xl overflow-y-auto">
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">รายละเอียด KPI</h3>
+                    <button id="closeKPIInfo" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fa-solid fa-xmark w-6 h-6"></i>
+                    </button>
+                </div>
+                <div class="p-6" id="kpiInfoContent"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let kpiData = null;
@@ -325,10 +340,17 @@
             document.getElementById('sourceModal').addEventListener('click', function(e) {
                 if (e.target === this) closeModal();
             });
-            
+            document.getElementById('closeKPIInfo').addEventListener('click', closeKPIInfo);
+            document.getElementById('kpiInfoModal').addEventListener('click', function(e) {
+                if (e.target === this) closeKPIInfo();
+            });
+
             // Close modal on Escape key
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') closeModal();
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closeKPIInfo();
+                }
             });
         }
 
@@ -595,14 +617,13 @@
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
             card.addEventListener('click', () => filterByGroup(groupName));
-            
             card.innerHTML = `
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-semibold text-gray-900 text-lg">${groupName}</h3>
-                        <div class="p-2 bg-blue-100 rounded-full">
+                        <button class="info-btn p-2 bg-blue-100 rounded-full hover:bg-blue-200">
                             <i class="fa-solid fa-folder text-blue-600 w-5 h-5"></i>
-                        </div>
+                        </button>
                     </div>
                     
                     <div class="space-y-3">
@@ -632,7 +653,12 @@
                     </div>
                 </div>
             `;
-            
+            const infoBtn = card.querySelector('.info-btn');
+            infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showKPIInfo(groupName);
+            });
+
             return card;
         }
 
@@ -897,6 +923,103 @@
             `;
 
             return html;
+        }
+
+        // Show KPI info modal
+        async function showKPIInfo(groupName) {
+            const modal = document.getElementById('kpiInfoModal');
+            const content = document.getElementById('kpiInfoContent');
+            content.innerHTML = '<div class="flex justify-center py-8"><div class="loading-spinner w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full"></div></div>';
+            modal.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}?action=getKPIInfoByGroup&param=${encodeURIComponent(groupName)}`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    content.innerHTML = createKPIInfoContent(result.data);
+                } else {
+                    content.innerHTML = `<div class="text-center py-8 text-red-600">เกิดข้อผิดพลาด: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading KPI info:', error);
+                content.innerHTML = `<div class="text-center py-8 text-red-600">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>`;
+            }
+        }
+
+        // Create KPI info content
+        function createKPIInfoContent(data) {
+            if (!data) {
+                return '<div class="text-center py-8 text-gray-500">ไม่มีข้อมูล</div>';
+            }
+
+            // หากข้อมูลเป็น array (รูปแบบเดิม) ให้จัดกลุ่มใหม่เป็น
+            // ตัวชี้วัดหลัก → ตัวชี้วัดย่อย → กลุ่มเป้าหมาย
+            if (Array.isArray(data)) {
+                const grouped = {};
+                data.forEach(item => {
+                    const main = item['ตัวชี้วัดหลัก'] || '-';
+                    const sub = item['ตัวชี้วัดย่อย'] || '-';
+                    const target = item['กลุ่มเป้าหมาย'] || '-';
+                    if (!grouped[main]) grouped[main] = {};
+                    if (!grouped[main][sub]) grouped[main][sub] = {};
+                    if (!grouped[main][sub][target]) grouped[main][sub][target] = [];
+                    grouped[main][sub][target].push(item);
+                });
+                data = grouped;
+            }
+
+            if (Object.keys(data).length === 0) {
+                return '<div class="text-center py-8 text-gray-500">ไม่มีข้อมูล</div>';
+            }
+
+            return Object.entries(data).map(([main, subMap]) => {
+                const subHtml = Object.entries(subMap).map(([sub, targetMap]) => {
+                    const targetHtml = Object.entries(targetMap).map(([target, items]) => {
+                        const itemList = Array.isArray(items) ? items : [items];
+                        const itemHtml = itemList.map(item => {
+                            const listItems = ['รายการข้อมูล_1','รายการข้อมูล_2','รายการข้อมูล_3','รายการข้อมูล_4','รายการข้อมูล_5']
+                                .map(key => item[key])
+                                .filter(text => text && text.trim() !== '')
+                                .map(text => `<li class="list-disc ml-6">${text}</li>`)
+                                .join('');
+
+                        const reference = item['แหล่งอ้างอิง'] ? `<a href="${item['แหล่งอ้างอิง']}" target="_blank" class="text-blue-600 underline">${item['แหล่งอ้างอิง']}</a>` : '-';
+
+                        return `
+                            <div class="ml-6 mt-2 mb-4 text-sm text-gray-700">
+                                <div class="space-y-2">
+                                    <div><span class="font-medium">คำนิยาม:</span> ${item['คำนิยาม'] || '-'}</div>
+                                    <div><span class="font-medium">เกณฑ์เป้าหมาย:</span> ${item['เกณฑ์เป้าหมาย'] || '-'}</div>
+                                    <div><span class="font-medium">ประชากรกลุ่มเป้าหมาย:</span> ${item['ประชากรกลุ่มเป้าหมาย'] || '-'}</div>
+                                    <div><span class="font-medium">วิธีการจัดเก็บข้อมูล:</span> ${item['วิธีการจัดเก็บข้อมูล'] || '-'}</div>
+                                    <div><span class="font-medium">แหล่งข้อมูล:</span> ${item['แหล่งข้อมูล'] || '-'}</div>
+                                    ${listItems ? `<div><span class="font-medium">รายการข้อมูล:</span><ul class="mt-1">${listItems}</ul></div>` : ''}
+                                    <div><span class="font-medium">สูตรการคำนวณ:</span> ${item['สูตรการคำนวณ'] || '-'}</div>
+                                    <div><span class="font-medium">เอกสารสนับสนุน:</span> ${item['เอกสารสนับสนุน'] || '-'}</div>
+                                </div>
+                                <div class="mt-4 space-y-1">
+                                    <div><span class="font-medium">หน่วยงานรับผิดชอบ:</span> ${item['หน่วยงานรับผิดชอบ'] || '-'}</div>
+                                    <div><span class="font-medium">ผู้ประสานงาน:</span> ${item['ผู้ประสานงาน'] || '-'}</div>
+                                    <div><span class="font-medium">แหล่งอ้างอิง:</span> ${reference}</div>
+                                    <div><span class="font-medium">หมายเหตุ:</span> ${item['หมายเหตุ'] || '-'}</div>
+                                </div>
+                            </div>
+                        `;
+                        }).join('');
+
+                        return `<details class="ml-6 mb-3"><summary class="cursor-pointer text-gray-700">${target}</summary>${itemHtml}</details>`;
+                    }).join('');
+
+                    return `<details class="ml-4 mb-4"><summary class="cursor-pointer font-medium text-gray-800">${sub}</summary>${targetHtml}</details>`;
+                }).join('');
+
+                return `<details class="mb-6"><summary class="cursor-pointer font-semibold text-lg text-gray-900">${main}</summary>${subHtml}</details>`;
+            }).join('');
+        }
+
+        // Close KPI info modal
+        function closeKPIInfo() {
+            document.getElementById('kpiInfoModal').classList.add('hidden');
         }
 
         // Close modal
