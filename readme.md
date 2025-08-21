@@ -1,8 +1,8 @@
-# ระบบ KPI Dashboard สำหรับหน่วยบริการสาธารณสุข
+# ระบบ Dashboard ตัวชี้วัด สำหรับหน่วยบริการสาธารณสุข
 
 ## ภาพรวมโครงการ
 
-ระบบ KPI Dashboard นี้ถูกพัฒนาขึ้นเพื่อรวบรวมและแสดงผลตัวชี้วัดสำคัญ (Key Performance Indicators) สำหรับหน่วยบริการสาธารณสุข โดยใช้ Google Sheets เป็นฐานข้อมูลหลัก, Google Apps Script เป็น API backend, และ HTML + Tailwind CSS เป็น frontend
+ระบบ Dashboard ตัวชี้วัดนี้ถูกพัฒนาขึ้นเพื่อรวบรวมและแสดงผลตัวชี้วัดสำคัญ (Key Performance Indicators) สำหรับหน่วยบริการสาธารณสุข โดยใช้ Google Sheets เป็นฐานข้อมูลหลัก, Google Apps Script เป็น API backend, และ HTML + Tailwind CSS เป็น frontend
 
 ## คุณสมบัติหลัก
 
@@ -32,7 +32,7 @@
 ## โครงสร้างไฟล์
 
 \`\`\`
-kpi-dashboard/
+indicator-dashboard/
 ├── index.html          # หน้าเว็บหลัก
 ├── dashboard.js        # JavaScript สำหรับ frontend
 ├── apps-script.js      # Google Apps Script backend
@@ -100,10 +100,10 @@ kpi-dashboard/
 
 ### Google Apps Script Web App รองรับ actions ดังนี้:
 
-- `?action=getAllKPIData` - ดึงข้อมูลทั้งหมด
-- `?action=getKPIConfiguration` - ดึงการตั้งค่าจาก Sheet[Data]
+- `?action=getAllIndicatorData` - ดึงข้อมูลทั้งหมด
+- `?action=getIndicatorConfiguration` - ดึงการตั้งค่าจาก Sheet[Data]
 - `?action=getSourceSheetData&sheetName=ชื่อsheet` - ดึงข้อมูลจาก sheet เฉพาะ
-- `?action=getKPIByGroup&groupName=ชื่อกลุ่ม` - ดึงข้อมูลตามประเด็นขับเคลื่อน
+- `?action=getIndicatorByGroup&groupName=ชื่อกลุ่ม` - ดึงข้อมูลตามประเด็นขับเคลื่อน
 
 ## ตัวอย่างข้อมูล
 
