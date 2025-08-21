@@ -1,148 +1,186 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KPI Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบ KPI Dashboard - หน่วยบริการสาธารณสุข</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+        .loading { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .progress-bar { transition: width 0.3s ease-in-out; }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+    </style>
 </head>
-<body class="bg-gray-100">
-  <header class="p-4 bg-blue-600 text-white flex justify-between">
-    <h1 class="text-xl font-semibold">KPI Dashboard</h1>
-    <div id="last-updated" class="text-sm"></div>
-  </header>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-600 p-2 rounded-lg">
+                        <i class="fas fa-chart-line text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">ระบบ KPI Dashboard</h1>
+                        <p class="text-sm text-gray-600">หน่วยบริการสาธารณสุข</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-500">อัพเดทล่าสุด</div>
+                    <div id="lastUpdate" class="text-sm font-medium text-gray-900">กำลังโหลด...</div>
+                    <div class="text-xs text-blue-600">
+                        <span id="totalKPIs">0</span> ตัวชี้วัดทั้งหมด
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  <main class="p-4 space-y-4">
-    <!-- Filter Panel -->
-    <section class="bg-white p-4 rounded shadow">
-      <div class="flex flex-wrap gap-4" id="filters"></div>
-      <button id="resetFilters" class="mt-4 px-4 py-2 bg-gray-200 rounded">Reset Filter</button>
-    </section>
-
-    <!-- KPI Group Cards -->
-    <section id="groupCards" class="grid md:grid-cols-3 gap-4"></section>
-
-    <!-- KPI Detail Table -->
-    <section class="bg-white p-4 rounded shadow">
-      <table class="min-w-full table-auto" id="detailTable">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="p-2">ตัวชี้วัดย่อย</th>
-            <th class="p-2">หน่วยบริการ</th>
-            <th class="p-2">เป้าหมาย</th>
-            <th class="p-2">ผลงาน</th>
-            <th class="p-2">ร้อยละ</th>
-            <th class="p-2">เกณฑ์ผ่าน</th>
-            <th class="p-2">วันที่อัพเดท</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </section>
-  </main>
-
-  <!-- Modal -->
-  <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-4 rounded shadow max-h-full overflow-auto w-11/12 md:w-2/3">
-      <button id="closeModal" class="float-right text-red-500">X</button>
-      <pre id="modalContent" class="mt-4 whitespace-pre-wrap"></pre>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-spinner loading text-blue-600 text-xl"></i>
+                <span class="text-gray-700">กำลังโหลดข้อมูล...</span>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    const API_BASE = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
-    let allData = null;
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Filter Panel -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-64">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ประเด็นขับเคลื่อน</label>
+                    <select id="groupFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">ทั้งหมด</option>
+                    </select>
+                </div>
+                <div class="flex-1 min-w-64">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ตัวชี้วัดหลัก</label>
+                    <select id="kpiFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">ทั้งหมด</option>
+                    </select>
+                </div>
+                <div class="flex-1 min-w-64">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">หน่วยบริการ</label>
+                    <select id="serviceFilter" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">ทั้งหมด</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button id="resetFilter" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-undo mr-2"></i>รีเซ็ต
+                    </button>
+                </div>
+            </div>
+        </div>
 
-    async function fetchAll() {
-      const res = await fetch(`${API_BASE}?action=getAllKPIData`);
-      const json = await res.json();
-      if (json.status !== 'success') {
-        console.error(json.message);
-        return;
-      }
-      allData = json.data;
-      document.getElementById('last-updated').textContent = new Date(json.timestamp).toLocaleString();
-      renderFilters();
-      renderGroupCards();
-      renderTable(allData.configuration);
-    }
+        <!-- Summary Cards -->
+        <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Cards will be populated by JavaScript -->
+        </div>
 
-    function renderFilters() {
-      const filterContainer = document.getElementById('filters');
-      filterContainer.innerHTML = '';
-      const groups = allData.groups;
-      const select = document.createElement('select');
-      select.id = 'groupFilter';
-      select.className = 'p-2 border rounded';
-      select.innerHTML = `<option value="">เลือกประเด็นขับเคลื่อน</option>`;
-      groups.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g;
-        opt.textContent = g;
-        select.appendChild(opt);
-      });
-      select.addEventListener('change', () => {
-        const value = select.value;
-        if (value) {
-          renderTable(allData.configuration.filter(c => c['ประเด็นขับเคลื่อน'] === value));
-        } else {
-          renderTable(allData.configuration);
-        }
-      });
-      filterContainer.appendChild(select);
-      document.getElementById('resetFilters').onclick = () => { select.value = ''; renderTable(allData.configuration); };
-    }
+        <!-- KPI Group Cards -->
+        <div id="kpiGroups" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+            <!-- Group cards will be populated by JavaScript -->
+        </div>
 
-    function renderGroupCards() {
-      const container = document.getElementById('groupCards');
-      container.innerHTML = '';
-      const grouped = {};
-      allData.configuration.forEach(item => {
-        const key = item['ประเด็นขับเคลื่อน'];
-        if (!grouped[key]) grouped[key] = { count: 0, percent: 0 };
-        grouped[key].count++;
-        grouped[key].percent += Number(item['ร้อยละ (%)'] || 0);
-      });
-      Object.entries(grouped).forEach(([group, info]) => {
-        const avg = info.percent / info.count;
-        const card = document.createElement('div');
-        card.className = `p-4 rounded shadow ${avg >= 80 ? 'bg-green-100' : 'bg-red-100'}`;
-        card.innerHTML = `<h3 class="font-semibold">${group}</h3><p>จำนวน KPI: ${info.count}</p><p>เฉลี่ย: ${avg.toFixed(2)}%</p>`;
-        container.appendChild(card);
-      });
-    }
+        <!-- KPI Detail Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">รายละเอียดตัวชี้วัด</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('indicator')">
+                                ตัวชี้วัดย่อย <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('service')">
+                                หน่วยบริการ <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('target')">
+                                เป้าหมาย <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('result')">
+                                ผลงาน <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable('percentage')">
+                                ร้อยละ <i class="fas fa-sort ml-1"></i>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                สถานะ
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                วันที่อัพเดท
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                การดำเนินการ
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="kpiTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button id="prevPageMobile" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        ก่อนหน้า
+                    </button>
+                    <button id="nextPageMobile" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        ถัดไป
+                    </button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            แสดง <span id="showingFrom" class="font-medium">1</span> ถึง <span id="showingTo" class="font-medium">10</span> 
+                            จาก <span id="totalItems" class="font-medium">0</span> รายการ
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" id="pagination">
+                            <!-- Pagination buttons will be populated by JavaScript -->
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function renderTable(data) {
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '';
-      data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.className = 'odd:bg-white even:bg-gray-50 hover:bg-blue-50 cursor-pointer';
-        tr.innerHTML = `
-          <td class="p-2">${row['ตัวชี้วัดย่อย'] || ''}</td>
-          <td class="p-2">${row['ชื่อหน่วยบริการ'] || ''}</td>
-          <td class="p-2">${row['เป้าหมาย'] || ''}</td>
-          <td class="p-2">${row['ผลงาน'] || ''}</td>
-          <td class="p-2">${row['ร้อยละ (%)'] || ''}</td>
-          <td class="p-2">${row['เกณฑ์ผ่าน (%)'] || ''}</td>
-          <td class="p-2">${row['ข้อมูลวันที่'] || ''}</td>`;
-        tr.addEventListener('click', () => openModal(row));
-        tbody.appendChild(tr);
-      });
-    }
+    <!-- Modal for Raw Data -->
+    <div id="rawDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900" id="modalTitle">ข้อมูลดิบ</h3>
+                <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50" id="modalTableHead">
+                        <!-- Headers will be populated by JavaScript -->
+                    </thead>
+                    <tbody id="modalTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-    function openModal(row) {
-      const modal = document.getElementById('modal');
-      const content = document.getElementById('modalContent');
-      content.textContent = JSON.stringify(row, null, 2);
-      modal.classList.remove('hidden');
-    }
-
-    document.getElementById('closeModal').onclick = () => {
-      document.getElementById('modal').classList.add('hidden');
-    };
-
-    fetchAll();
-  </script>
+    <script src="dashboard.js"></script>
 </body>
 </html>

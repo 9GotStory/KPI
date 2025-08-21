@@ -1,104 +1,249 @@
-const CONFIG_SHEET_NAME = 'Data';
+// Google Apps Script Backend Code
+// Deploy this as a web app with execute permissions set to "Anyone"
 
-/**
- * Returns master KPI configuration from the Data sheet.
- * @returns {Object} API response containing configuration list
- */
-function getKPIConfiguration() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(CONFIG_SHEET_NAME);
-  if (!sheet) {
-    return buildError('Configuration sheet not found');
-  }
-  const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
-  const configuration = data.map(row => {
-    const obj = {};
-    headers.forEach((h, i) => (obj[h] = row[i]));
-    return obj;
-  });
-  return buildResponse({ configuration });
+const ContentService = google.script.content
+const SpreadsheetApp = google.script.spreadsheet
+const CacheService = google.script.cache
+const google = {
+  script: {
+    content: ContentService,
+    spreadsheet: SpreadsheetApp,
+    cache: CacheService,
+  },
 }
 
-/**
- * Returns raw data from a given source sheet name.
- * @param {String} sheetName The name of the source sheet
- * @returns {Object} API response containing sheet data
- */
-function getSourceSheetData(sheetName) {
-  const ss = SpreadsheetApp.getActive();
-  const sheet = ss.getSheetByName(sheetName);
-  if (!sheet) {
-    return buildError('Source sheet not found: ' + sheetName);
-  }
-  const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
-  const rows = data.map(r => {
-    const obj = {};
-    headers.forEach((h, i) => (obj[h] = r[i]));
-    return obj;
-  });
-  return buildResponse(rows);
-}
+function doGet(e) {
+  const action = e.parameter.action || "getAllKPIData"
 
-/**
- * Returns all KPI configuration and related source data.
- * @returns {Object} API response containing configuration and source data
- */
-function getAllKPIData() {
-  const confResp = getKPIConfiguration();
-  if (confResp.status === 'error') {
-    return confResp;
-  }
-  const configuration = confResp.data.configuration;
-  const sourceData = {};
-  const groups = new Set();
-  configuration.forEach(item => {
-    const sheetName = item['sheet_source'];
-    groups.add(item['ประเด็นขับเคลื่อน']);
-    if (sheetName && !sourceData[sheetName]) {
-      const resp = getSourceSheetData(sheetName);
-      sourceData[sheetName] = resp.data;
+  try {
+    switch (action) {
+      case "getKPIConfiguration":
+        return ContentService.createTextOutput(JSON.stringify(getKPIConfiguration())).setMimeType(
+          ContentService.MimeType.JSON,
+        )
+
+      case "getSourceSheetData":
+        const sheetName = e.parameter.sheetName
+        return ContentService.createTextOutput(JSON.stringify(getSourceSheetData(sheetName))).setMimeType(
+          ContentService.MimeType.JSON,
+        )
+
+      case "getAllKPIData":
+        return ContentService.createTextOutput(JSON.stringify(getAllKPIData())).setMimeType(
+          ContentService.MimeType.JSON,
+        )
+
+      case "getKPIByGroup":
+        const groupName = e.parameter.groupName
+        return ContentService.createTextOutput(JSON.stringify(getKPIByGroup(groupName))).setMimeType(
+          ContentService.MimeType.JSON,
+        )
+
+      default:
+        throw new Error("Invalid action parameter")
     }
-  });
-  return buildResponse({
-    configuration,
-    sourceData,
-    groups: Array.from(groups)
-  });
-}
-
-/**
- * Returns KPI data filtered by driving issue (group name).
- * @param {String} groupName The driving issue to filter by
- * @returns {Object} API response containing filtered configuration
- */
-function getKPIByGroup(groupName) {
-  const confResp = getKPIConfiguration();
-  if (confResp.status === 'error') {
-    return confResp;
+  } catch (error) {
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        status: "error",
+        message: error.toString(),
+        timestamp: new Date().toISOString(),
+      }),
+    ).setMimeType(ContentService.MimeType.JSON)
   }
-  const configuration = confResp.data.configuration.filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
-  return buildResponse({ configuration });
 }
 
-/**
- * Helper to build consistent API response.
- */
-function buildResponse(data) {
-  return {
-    status: 'success',
-    timestamp: new Date().toISOString(),
-    data
-  };
+function getKPIConfiguration() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data")
+    if (!sheet) {
+      throw new Error('Sheet "Data" not found')
+    }
+
+    const data = sheet.getDataRange().getValues()
+    const headers = data[0]
+    const rows = data.slice(1)
+
+    const configuration = rows.map((row) => {
+      const obj = {}
+      headers.forEach((header, index) => {
+        obj[header] = row[index]
+      })
+      return obj
+    })
+
+    return {
+      status: "success",
+      timestamp: new Date().toISOString(),
+      data: configuration,
+    }
+  } catch (error) {
+    throw new Error(`Error getting KPI configuration: ${error.toString()}`)
+  }
 }
 
-/**
- * Helper to build error responses.
- */
-function buildError(message) {
-  return {
-    status: 'error',
-    timestamp: new Date().toISOString(),
-    message
-  };
+function getSourceSheetData(sheetName) {
+  try {
+    if (!sheetName) {
+      throw new Error("Sheet name parameter is required")
+    }
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName)
+    if (!sheet) {
+      throw new Error(`Sheet "${sheetName}" not found`)
+    }
+
+    const data = sheet.getDataRange().getValues()
+    const headers = data[0]
+    const rows = data.slice(1)
+
+    const sourceData = rows.map((row) => {
+      const obj = {}
+      headers.forEach((header, index) => {
+        obj[header] = row[index]
+      })
+      return obj
+    })
+
+    return {
+      status: "success",
+      timestamp: new Date().toISOString(),
+      sheetName: sheetName,
+      data: sourceData,
+    }
+  } catch (error) {
+    throw new Error(`Error getting source sheet data: ${error.toString()}`)
+  }
+}
+
+function getAllKPIData() {
+  try {
+    // Get configuration from Data sheet
+    const configResult = getKPIConfiguration()
+    const configuration = configResult.data
+
+    // Get unique source sheets
+    const sourceSheets = [...new Set(configuration.map((item) => item.sheet_source))]
+
+    // Get data from all source sheets
+    const sourceData = {}
+    sourceSheets.forEach((sheetName) => {
+      if (sheetName) {
+        try {
+          const sheetResult = getSourceSheetData(sheetName)
+          sourceData[sheetName] = sheetResult.data
+        } catch (error) {
+          console.error(`Error loading sheet ${sheetName}:`, error)
+          sourceData[sheetName] = []
+        }
+      }
+    })
+
+    // Get unique groups
+    const groups = [...new Set(configuration.map((item) => item["ประเด็นขับเคลื่อน"]))]
+
+    return {
+      status: "success",
+      timestamp: new Date().toISOString(),
+      data: {
+        configuration: configuration,
+        sourceData: sourceData,
+        groups: groups,
+      },
+    }
+  } catch (error) {
+    throw new Error(`Error getting all KPI data: ${error.toString()}`)
+  }
+}
+
+function getKPIByGroup(groupName) {
+  try {
+    if (!groupName) {
+      throw new Error("Group name parameter is required")
+    }
+
+    const allData = getAllKPIData()
+    const filteredConfiguration = allData.data.configuration.filter((item) => item["ประเด็นขับเคลื่อน"] === groupName)
+
+    return {
+      status: "success",
+      timestamp: new Date().toISOString(),
+      groupName: groupName,
+      data: {
+        configuration: filteredConfiguration,
+        sourceData: allData.data.sourceData,
+      },
+    }
+  } catch (error) {
+    throw new Error(`Error getting KPI by group: ${error.toString()}`)
+  }
+}
+
+// Utility function to refresh data cache (call this when data is updated)
+function refreshDataCache() {
+  try {
+    // Clear any cached data
+    const cache = CacheService.getScriptCache()
+    cache.removeAll(["kpi_configuration", "all_kpi_data"])
+
+    // Pre-load fresh data
+    getAllKPIData()
+
+    return {
+      status: "success",
+      message: "Data cache refreshed successfully",
+      timestamp: new Date().toISOString(),
+    }
+  } catch (error) {
+    throw new Error(`Error refreshing data cache: ${error.toString()}`)
+  }
+}
+
+// Function to validate sheet structure
+function validateSheetStructure() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet()
+    const sheets = spreadsheet.getSheets()
+    const sheetNames = sheets.map((sheet) => sheet.getName())
+
+    const requiredSheets = ["Data"]
+    const missingSheets = requiredSheets.filter((name) => !sheetNames.includes(name))
+
+    if (missingSheets.length > 0) {
+      throw new Error(`Missing required sheets: ${missingSheets.join(", ")}`)
+    }
+
+    // Validate Data sheet structure
+    const dataSheet = spreadsheet.getSheetByName("Data")
+    const headers = dataSheet.getRange(1, 1, 1, dataSheet.getLastColumn()).getValues()[0]
+
+    const requiredColumns = [
+      "ประเด็นขับเคลื่อน",
+      "ตัวชี้วัดหลัก",
+      "ตัวชี้วัดย่อย",
+      "กลุ่มเป้าหมาย",
+      "ชื่อหน่วยบริการ",
+      "เป้าหมาย",
+      "ผลงาน",
+      "ร้อยละ (%)",
+      "เกณฑ์ผ่าน (%)",
+      "ข้อมูลวันที่",
+      "sheet_source",
+      "service_code_ref",
+    ]
+
+    const missingColumns = requiredColumns.filter((col) => !headers.includes(col))
+
+    return {
+      status: "success",
+      message: "Sheet structure validation completed",
+      timestamp: new Date().toISOString(),
+      sheets: sheetNames,
+      missingSheets: missingSheets,
+      missingColumns: missingColumns,
+      isValid: missingSheets.length === 0 && missingColumns.length === 0,
+    }
+  } catch (error) {
+    throw new Error(`Error validating sheet structure: ${error.toString()}`)
+  }
 }
