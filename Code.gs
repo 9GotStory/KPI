@@ -4,6 +4,7 @@
 function doGet(e) {
   const action = e.parameter.action || "getAllIndicatorData"
   const callback = e.parameter.callback
+
   let result
 
   try {
