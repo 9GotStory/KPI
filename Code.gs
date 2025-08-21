@@ -6,7 +6,7 @@
 // Configuration Constants
 const CONFIG = {
   SPREADSHEET_ID: '1H9WCgtUHD_y63jWD_YVUl5sZdjiDto11KwjUUg7kj14', // Replace with your Google Sheets ID
-  MASTER_SHEET: 'Data',
+  MASTER_SHEET: 'Data Results',
   KPI_INFO_SHEET: 'KPI_Info',
   CACHE_DURATION: 300, // 5 minutes in seconds
   API_VERSION: '1.0.0'
@@ -67,7 +67,7 @@ function doGet(e) {
 }
 
 /**
- * อ่านข้อมูล configuration จาก Sheet[Data]
+ * อ่านข้อมูล configuration จาก Sheet[Data Results]
  * @return {Array} ข้อมูล configuration ทั้งหมด
  */
 function getKPIConfiguration() {
@@ -319,8 +319,6 @@ function getKPIInfoByGroup(groupName) {
       })
       .filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
 
-    // จัดกลุ่มข้อมูลตามตัวชี้วัดหลัก > ตัวชี้วัดย่อย > กลุ่มเป้าหมาย
-    // รองรับกรณีที่ตัวชี้วัดย่อยเดียวกันมีหลายแถวข้อมูล
     const grouped = {};
     info.forEach(item => {
       const main = item['ตัวชี้วัดหลัก'] || '-';
@@ -331,6 +329,7 @@ function getKPIInfoByGroup(groupName) {
       if (!grouped[main][sub]) grouped[main][sub] = {};
       if (!grouped[main][sub][target]) grouped[main][sub][target] = [];
       grouped[main][sub][target].push(item);
+
     });
 
     setCachedData(cacheKey, grouped);
