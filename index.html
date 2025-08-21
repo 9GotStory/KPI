@@ -962,9 +962,11 @@
                                 .map(text => `<li class="list-disc ml-6">${text}</li>`)
                                 .join('');
 
+
                         const reference = item['แหล่งอ้างอิง'] ? `<a href="${item['แหล่งอ้างอิง']}" target="_blank" class="text-blue-600 underline">${item['แหล่งอ้างอิง']}</a>` : '-';
 
                         return `
+
                             <div class="ml-6 mt-2 mb-4 text-sm text-gray-700">
                                 <div class="space-y-2">
                                     <div><span class="font-medium">คำนิยาม:</span> ${item['คำนิยาม'] || '-'}</div>
@@ -976,6 +978,7 @@
                                     <div><span class="font-medium">สูตรการคำนวณ:</span> ${item['สูตรการคำนวณ'] || '-'}</div>
                                     <div><span class="font-medium">เอกสารสนับสนุน:</span> ${item['เอกสารสนับสนุน'] || '-'}</div>
                                 </div>
+
                                 <div class="mt-4 space-y-1">
                                     <div><span class="font-medium">หน่วยงานรับผิดชอบ:</span> ${item['หน่วยงานรับผิดชอบ'] || '-'}</div>
                                     <div><span class="font-medium">ผู้ประสานงาน:</span> ${item['ผู้ประสานงาน'] || '-'}</div>
@@ -984,6 +987,7 @@
                                 </div>
                             </div>
                         `;
+
                         }).join('');
 
                         return `<details class="ml-6 mb-3"><summary class="cursor-pointer text-gray-700">${target}</summary>${itemHtml}</details>`;
@@ -993,6 +997,7 @@
                 }).join('');
 
                 return `<details class="mb-6"><summary class="cursor-pointer font-semibold text-lg text-gray-900">${main}</summary>${subHtml}</details>`;
+
             }).join('');
         }
 
