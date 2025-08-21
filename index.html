@@ -948,25 +948,44 @@
 
         // Create KPI info content
         function createKPIInfoContent(data) {
-            if (!data || Object.keys(data).length === 0) {
+            if (!data) {
+                return '<div class="text-center py-8 text-gray-500">ไม่มีข้อมูล</div>';
+            }
+
+            // หากข้อมูลเป็น array (รูปแบบเดิม) ให้จัดกลุ่มใหม่เป็น
+            // ตัวชี้วัดหลัก → ตัวชี้วัดย่อย → กลุ่มเป้าหมาย
+            if (Array.isArray(data)) {
+                const grouped = {};
+                data.forEach(item => {
+                    const main = item['ตัวชี้วัดหลัก'] || '-';
+                    const sub = item['ตัวชี้วัดย่อย'] || '-';
+                    const target = item['กลุ่มเป้าหมาย'] || '-';
+                    if (!grouped[main]) grouped[main] = {};
+                    if (!grouped[main][sub]) grouped[main][sub] = {};
+                    if (!grouped[main][sub][target]) grouped[main][sub][target] = [];
+                    grouped[main][sub][target].push(item);
+                });
+                data = grouped;
+            }
+
+            if (Object.keys(data).length === 0) {
                 return '<div class="text-center py-8 text-gray-500">ไม่มีข้อมูล</div>';
             }
 
             return Object.entries(data).map(([main, subMap]) => {
                 const subHtml = Object.entries(subMap).map(([sub, targetMap]) => {
                     const targetHtml = Object.entries(targetMap).map(([target, items]) => {
-                        const itemHtml = items.map(item => {
+                        const itemList = Array.isArray(items) ? items : [items];
+                        const itemHtml = itemList.map(item => {
                             const listItems = ['รายการข้อมูล_1','รายการข้อมูล_2','รายการข้อมูล_3','รายการข้อมูล_4','รายการข้อมูล_5']
                                 .map(key => item[key])
                                 .filter(text => text && text.trim() !== '')
                                 .map(text => `<li class="list-disc ml-6">${text}</li>`)
                                 .join('');
 
-
                         const reference = item['แหล่งอ้างอิง'] ? `<a href="${item['แหล่งอ้างอิง']}" target="_blank" class="text-blue-600 underline">${item['แหล่งอ้างอิง']}</a>` : '-';
 
                         return `
-
                             <div class="ml-6 mt-2 mb-4 text-sm text-gray-700">
                                 <div class="space-y-2">
                                     <div><span class="font-medium">คำนิยาม:</span> ${item['คำนิยาม'] || '-'}</div>
