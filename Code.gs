@@ -7,6 +7,7 @@
 const CONFIG = {
   SPREADSHEET_ID: '1H9WCgtUHD_y63jWD_YVUl5sZdjiDto11KwjUUg7kj14', // Replace with your Google Sheets ID
   MASTER_SHEET: 'Data',
+  KPI_INFO_SHEET: 'KPI_Info',
   CACHE_DURATION: 300, // 5 minutes in seconds
   API_VERSION: '1.0.0'
 };
@@ -34,6 +35,9 @@ function doGet(e) {
         break;
       case 'getKPIByGroup':
         result = getKPIByGroup(param);
+        break;
+      case 'getKPIInfoByGroup':
+        result = getKPIInfoByGroup(param);
         break;
       default:
         throw new Error('Invalid API action: ' + action);
@@ -272,6 +276,52 @@ function getKPIByGroup(groupName) {
     
   } catch (error) {
     Logger.log('Error in getKPIByGroup: ' + error.toString());
+    throw error;
+  }
+}
+
+/**
+ * ดึงข้อมูล KPI_Info ตามประเด็นขับเคลื่อน
+ * @param {string} groupName ชื่อประเด็นขับเคลื่อน
+ * @return {Array} ข้อมูล KPI_Info ที่ตรงกับกลุ่ม
+ */
+function getKPIInfoByGroup(groupName) {
+  if (!groupName) {
+    throw new Error('กรุณาระบุชื่อประเด็นขับเคลื่อน');
+  }
+
+  const cacheKey = 'kpi_info_' + groupName;
+  const cached = getCachedData(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const sheet = spreadsheet.getSheetByName(CONFIG.KPI_INFO_SHEET);
+    if (!sheet) {
+      throw new Error('ไม่พบ Sheet: ' + CONFIG.KPI_INFO_SHEET);
+    }
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return [];
+    }
+
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    const info = rows.map(row => {
+      const record = {};
+      headers.forEach((header, index) => {
+        record[header] = row[index] || '';
+      });
+      return record;
+    }).filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
+
+    setCachedData(cacheKey, info);
+    return info;
+
+  } catch (error) {
+    Logger.log('Error in getKPIInfoByGroup: ' + error.toString());
     throw error;
   }
 }
