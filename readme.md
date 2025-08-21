@@ -78,6 +78,7 @@ kpi-dashboard/
 1. แก้ไข URL ใน `dashboard.js` ให้ชี้ไปยัง Google Apps Script Web App ของคุณ
 2. อัพโหลดไฟล์ `index.html` และ `dashboard.js` ไปยัง web server
 3. เปิดใช้งานผ่าน web browser
+4. หากพบปัญหา CORS ในระหว่างการพัฒนา ระบบจะเรียก API ผ่านตัวกลางที่ `https://cors.isomorphic-git.org/` คุณสามารถเปลี่ยนหรือลบ URL นี้ได้ใน `dashboard.js` เมื่อใช้งานจริง
 
 ## การใช้งาน
 

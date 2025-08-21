@@ -26,8 +26,9 @@ class KPIDashboard {
 
   async loadData() {
     try {
-      const url = "https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec"
-      const res = await fetch(url, { method: "GET", mode: "cors" })
+      const baseUrl = "https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec"
+      const proxyUrl = "https://cors.isomorphic-git.org/"
+      const res = await fetch(`${proxyUrl}${baseUrl}`, { method: "GET" })
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
