@@ -25,19 +25,13 @@ class KPIDashboard {
   }
 
   async loadData() {
-    const url = "https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec"
-    const response = await axios.get(url)
-    const result = response.data
-    if (result.status !== "success") {
-      throw new Error("API response error")
-    }
-
-    this.data = {
-      timestamp: result.timestamp,
-      configuration: result.data.configuration || [],
-      sourceData: result.data.sourceData || {},
-    }
-
+    try {
+      const url = "https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec"
+      const response = await axios.get(url)
+      const result = response.data
+      if (result.status !== "success") {
+        throw new Error("API response error")
+      }
 
       this.data = {
         timestamp: result.timestamp,
