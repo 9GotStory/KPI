@@ -362,8 +362,9 @@
 
         // Calculate summary statistics for given data
         function calculateSummary(data) {
+            const uniqueData = getUniqueKPIs(data);
             const summary = {
-                totalKPIs: data.length,
+                totalKPIs: uniqueData.length,
                 averagePercentage: 0,
                 passedKPIs: 0,
                 failedKPIs: 0
@@ -371,7 +372,7 @@
 
             let percentageSum = 0;
 
-            data.forEach(item => {
+            uniqueData.forEach(item => {
                 const target = parseFloat(item['เป้าหมาย']) || 0;
                 const performance = parseFloat(item['ผลงาน']) || 0;
                 const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
@@ -385,7 +386,7 @@
                 }
             });
 
-            summary.averagePercentage = data.length > 0 ? Math.round(percentageSum / data.length) : 0;
+            summary.averagePercentage = uniqueData.length > 0 ? Math.round(percentageSum / uniqueData.length) : 0;
             return summary;
         }
 
@@ -432,6 +433,17 @@
         function uniqueValues(data, field) {
             return [...new Set(data.map(item => item[field]).filter(v => v && v.toString().trim()))]
                 .sort((a, b) => a.toString().localeCompare(b.toString(), 'th'));
+        }
+
+        function getUniqueKPIs(data) {
+            const keyFields = ['ประเด็นขับเคลื่อน','ตัวชี้วัดหลัก','ตัวชี้วัดย่อย','กลุ่มเป้าหมาย'];
+            const seen = new Set();
+            return data.filter(item => {
+                const key = keyFields.map(f => (item[f] || '').toString()).join('|');
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
         }
 
         function removeDuplicateKPIs(data) {
@@ -543,7 +555,8 @@
             container.innerHTML = '';
 
             const stats = {};
-            data.forEach(item => {
+            const uniqueData = getUniqueKPIs(data);
+            uniqueData.forEach(item => {
                 const groupName = item['ประเด็นขับเคลื่อน'] || 'ไม่ระบุ';
                 const target = parseFloat(item['เป้าหมาย']) || 0;
                 const performance = parseFloat(item['ผลงาน']) || 0;
