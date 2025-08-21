@@ -1,17 +1,6 @@
 // Google Apps Script Backend Code
 // Deploy this as a web app with execute permissions set to "Anyone"
 
-const ContentService = google.script.content
-const SpreadsheetApp = google.script.spreadsheet
-const CacheService = google.script.cache
-const google = {
-  script: {
-    content: ContentService,
-    spreadsheet: SpreadsheetApp,
-    cache: CacheService,
-  },
-}
-
 function doGet(e) {
   const action = e.parameter.action || "getAllKPIData"
   let result
@@ -50,6 +39,8 @@ function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON)
     .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type")
 }
 
 function getKPIConfiguration() {
