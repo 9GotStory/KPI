@@ -359,32 +359,62 @@
             }
         }
 
+        // Calculate summary statistics for given data
+        function calculateSummary(data) {
+            const summary = {
+                totalKPIs: data.length,
+                averagePercentage: 0,
+                passedKPIs: 0,
+                failedKPIs: 0
+            };
+
+            let totalTarget = 0;
+            let totalPerformance = 0;
+
+            data.forEach(item => {
+                const target = parseFloat(item['เป้าหมาย']) || 0;
+                const performance = parseFloat(item['ผลงาน']) || 0;
+                const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
+                totalTarget += target;
+                totalPerformance += performance;
+
+                const percentage = target > 0 ? (performance / target) * 100 : 0;
+                if (percentage >= threshold) {
+                    summary.passedKPIs++;
+                } else {
+                    summary.failedKPIs++;
+                }
+            });
+
+            summary.averagePercentage = totalTarget > 0 ? Math.round((totalPerformance / totalTarget) * 100) : 0;
+            return summary;
+        }
+
         // Update dashboard with loaded data
         function updateDashboard() {
             if (!kpiData) return;
-            
-            // Update summary stats
-            updateSummaryStats();
-            
+
+            // Initialize filtered data and summary stats
+            filteredData = [...kpiData.configuration];
+            updateSummaryStats(filteredData);
+
             // Populate filters
             populateFilters();
-            
+
             // Create group cards
-            createGroupCards(kpiData.configuration);
-            
-            // Initialize filtered data
-            filteredData = [...kpiData.configuration];
+            createGroupCards(filteredData);
+
             updateTable();
             updateSelectedTags();
-            
+
             // Initialize Lucide icons for newly created elements
             initializeLucideIcons();
         }
 
         // Update summary statistics
-        function updateSummaryStats() {
-            const summary = kpiData.summary;
-            
+        function updateSummaryStats(data) {
+            const summary = calculateSummary(data);
+
             document.getElementById('totalKPIs').textContent = summary.totalKPIs.toLocaleString();
             document.getElementById('averagePercentage').textContent = summary.averagePercentage + '%';
             document.getElementById('passedKPIs').textContent = summary.passedKPIs.toLocaleString();
@@ -505,24 +535,36 @@
             const stats = {};
             data.forEach(item => {
                 const groupName = item['ประเด็นขับเคลื่อน'] || 'ไม่ระบุ';
-                const percentage = parseFloat(item['ร้อยละ (%)']) || 0;
+                const target = parseFloat(item['เป้าหมาย']) || 0;
+                const performance = parseFloat(item['ผลงาน']) || 0;
                 const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
+                const percentage = target > 0 ? (performance / target) * 100 : 0;
 
                 if (!stats[groupName]) {
-                    stats[groupName] = { count: 0, passed: 0, failed: 0, totalPercentage: 0, averagePercentage: 0 };
+                    stats[groupName] = {
+                        count: 0,
+                        passed: 0,
+                        failed: 0,
+                        totalTarget: 0,
+                        totalPerformance: 0,
+                        averagePercentage: 0
+                    };
                 }
 
-                stats[groupName].count++;
-                stats[groupName].totalPercentage += percentage;
+                const stat = stats[groupName];
+                stat.count++;
+                stat.totalTarget += target;
+                stat.totalPerformance += performance;
+
                 if (percentage >= threshold) {
-                    stats[groupName].passed++;
+                    stat.passed++;
                 } else {
-                    stats[groupName].failed++;
+                    stat.failed++;
                 }
             });
 
             Object.values(stats).forEach(stat => {
-                stat.averagePercentage = stat.count > 0 ? Math.round(stat.totalPercentage / stat.count) : 0;
+                stat.averagePercentage = stat.totalTarget > 0 ? Math.round((stat.totalPerformance / stat.totalTarget) * 100) : 0;
             });
 
             Object.entries(stats).forEach(([groupName, stat]) => {
@@ -646,12 +688,17 @@
                 if (target && item['กลุ่มเป้าหมาย'] !== target) return false;
                 return true;
             });
-            
+
             // Apply sorting
             const sortBy = document.getElementById('tableSortBy').value;
             filteredData.sort((a, b) => {
                 if (sortBy === 'ร้อยละ (%)') {
-                    return parseFloat(b[sortBy] || 0) - parseFloat(a[sortBy] || 0);
+                    const percent = item => {
+                        const target = parseFloat(item['เป้าหมาย']) || 0;
+                        const performance = parseFloat(item['ผลงาน']) || 0;
+                        return target > 0 ? (performance / target) * 100 : 0;
+                    };
+                    return percent(b) - percent(a);
                 } else {
                     return (a[sortBy] || '').toString().localeCompare((b[sortBy] || '').toString(), 'th');
                 }
@@ -659,6 +706,7 @@
             
             currentPage = 1;
             createGroupCards(filteredData);
+            updateSummaryStats(filteredData);
             updateTable();
             initializeLucideIcons();
             updateSelectedTags();
@@ -705,8 +753,10 @@
 
         // Create table row
         function createTableRow(item) {
-            const percentage = parseFloat(item['ร้อยละ (%)']) || 0;
+            const target = parseFloat(item['เป้าหมาย']) || 0;
+            const performance = parseFloat(item['ผลงาน']) || 0;
             const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
+            const percentage = target > 0 ? (performance / target) * 100 : 0;
             const passed = percentage >= threshold;
             
             const row = document.createElement('tr');
