@@ -23,19 +23,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalTableBody = document.getElementById('modal-table-body');
 
   const apiUrl =
-    'https://script.google.com/macros/s/ABCDEFG12345/exec?sheetName=Data'; 
+    'https://script.google.com/macros/s/ABCDEFG12345/exec?action=getAllKPIData';
 
-  fetch(apiUrl)
-    .then((response) => response.json())
-    .then((response) => {
-      // response ที่ได้จาก API จะอยู่ในนี้
-      // คุณต้องปรับโค้ดเดิมให้ใช้ข้อมูลจาก response นี้แทน
-      console.log(response.data);
-      // ...เรียกฟังก์ชัน render ต่างๆ ต่อไป...
-    })
-    .catch((error) => {
-      console.error('Failed to fetch data:', error);
-    });
+  async function fetchData() {
+    showLoading(true);
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      const data = await response.json();
+      onDataReceived(data);
+    } catch (error) {
+      onDataError(error);
+    }
+  }
 
   function onDataReceived(response) {
     if (response.status === 'success') {
