@@ -133,44 +133,47 @@
 
             <!-- Filter Panel -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
-                    <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4 flex-1">
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">หน่วยบริการ</label>
-                            <select id="serviceFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="">ทั้งหมด</option>
-                            </select>
-                        </div>
-
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ประเด็นขับเคลื่อน</label>
-                            <select id="groupFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="">ทั้งหมด</option>
-                            </select>
-                        </div>
-
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ตัวชี้วัดหลัก</label>
-                            <select id="mainFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="">ทั้งหมด</option>
-                            </select>
-                        </div>
-
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ตัวชี้วัดย่อย</label>
-                            <select id="subFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="">ทั้งหมด</option>
-                            </select>
-                        </div>
-
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">กลุ่มเป้าหมาย</label>
-                            <select id="targetFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="">ทั้งหมด</option>
-                            </select>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">หน่วยบริการ</label>
+                        <select id="serviceFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">ทั้งหมด</option>
+                        </select>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ประเด็นขับเคลื่อน</label>
+                        <select id="groupFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ตัวชี้วัดหลัก</label>
+                        <select id="mainFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">ตัวชี้วัดย่อย</label>
+                        <select id="subFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">กลุ่มเป้าหมาย</label>
+                        <select id="targetFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">ทั้งหมด</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Selected Tags -->
+                <div id="selectedTags" class="flex flex-wrap gap-2 mt-4"></div>
+
+                <div class="mt-4 flex justify-end">
                     <button id="resetFilters" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
                         รีเซ็ต
                     </button>
@@ -367,11 +370,12 @@
             populateFilters();
             
             // Create group cards
-            createGroupCards();
+            createGroupCards(kpiData.configuration);
             
             // Initialize filtered data
             filteredData = [...kpiData.configuration];
             updateTable();
+            updateSelectedTags();
             
             // Initialize Lucide icons for newly created elements
             initializeLucideIcons();
@@ -493,13 +497,36 @@
             }
         }
 
-        // Create group cards
-        function createGroupCards() {
+        // Create group cards dynamically from data
+        function createGroupCards(data) {
             const container = document.getElementById('kpiGroups');
             container.innerHTML = '';
-            
-            Object.entries(kpiData.summary.groupStats).forEach(([groupName, stats]) => {
-                const card = createGroupCard(groupName, stats);
+
+            const stats = {};
+            data.forEach(item => {
+                const groupName = item['ประเด็นขับเคลื่อน'] || 'ไม่ระบุ';
+                const percentage = parseFloat(item['ร้อยละ (%)']) || 0;
+                const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
+
+                if (!stats[groupName]) {
+                    stats[groupName] = { count: 0, passed: 0, failed: 0, totalPercentage: 0, averagePercentage: 0 };
+                }
+
+                stats[groupName].count++;
+                stats[groupName].totalPercentage += percentage;
+                if (percentage >= threshold) {
+                    stats[groupName].passed++;
+                } else {
+                    stats[groupName].failed++;
+                }
+            });
+
+            Object.values(stats).forEach(stat => {
+                stat.averagePercentage = stat.count > 0 ? Math.round(stat.totalPercentage / stat.count) : 0;
+            });
+
+            Object.entries(stats).forEach(([groupName, stat]) => {
+                const card = createGroupCard(groupName, stat);
                 container.appendChild(card);
             });
         }
@@ -553,6 +580,56 @@
             return card;
         }
 
+        // Update selected filter tags
+        function updateSelectedTags() {
+            const container = document.getElementById('selectedTags');
+            container.innerHTML = '';
+
+            const filters = [
+                { id: 'serviceFilter', label: 'หน่วยบริการ' },
+                { id: 'groupFilter', label: 'ประเด็นขับเคลื่อน' },
+                { id: 'mainFilter', label: 'ตัวชี้วัดหลัก' },
+                { id: 'subFilter', label: 'ตัวชี้วัดย่อย' },
+                { id: 'targetFilter', label: 'กลุ่มเป้าหมาย' }
+            ];
+
+            filters.forEach(f => {
+                const value = document.getElementById(f.id).value;
+                if (value) {
+                    const tag = document.createElement('span');
+                    tag.className = 'inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm';
+                    tag.innerHTML = `${f.label}: ${value} <button data-filter="${f.id}" class="ml-2 text-blue-500 hover:text-blue-700">&times;</button>`;
+                    container.appendChild(tag);
+                }
+            });
+
+            // Add remove handlers
+            container.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const filterId = e.target.getAttribute('data-filter');
+                    document.getElementById(filterId).value = '';
+
+                    if (filterId === 'serviceFilter') {
+                        populateGroupFilter();
+                        populateMainFilter();
+                        populateSubFilter();
+                        populateTargetFilter();
+                    } else if (filterId === 'groupFilter') {
+                        populateMainFilter();
+                        populateSubFilter();
+                        populateTargetFilter();
+                    } else if (filterId === 'mainFilter') {
+                        populateSubFilter();
+                        populateTargetFilter();
+                    } else if (filterId === 'subFilter') {
+                        populateTargetFilter();
+                    }
+
+                    applyFilters();
+                });
+            });
+        }
+
         // Apply filters
         function applyFilters() {
             const service = document.getElementById('serviceFilter').value;
@@ -581,7 +658,10 @@
             });
             
             currentPage = 1;
+            createGroupCards(filteredData);
             updateTable();
+            initializeLucideIcons();
+            updateSelectedTags();
         }
 
         // Reset filters
