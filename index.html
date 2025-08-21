@@ -341,13 +341,14 @@
         async function loadDashboardData() {
             showLoading();
             hideError();
-            
+
             try {
                 const response = await fetch(`${API_URL}?action=getAllKPIData`);
                 const result = await response.json();
-                
+
                 if (result.status === 'success') {
                     kpiData = result.data;
+                    kpiData.configuration = removeDuplicateKPIs(kpiData.configuration);
                     updateDashboard();
                     showDashboard();
                 } else {
@@ -368,17 +369,15 @@
                 failedKPIs: 0
             };
 
-            let totalTarget = 0;
-            let totalPerformance = 0;
+            let percentageSum = 0;
 
             data.forEach(item => {
                 const target = parseFloat(item['เป้าหมาย']) || 0;
                 const performance = parseFloat(item['ผลงาน']) || 0;
                 const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
-                totalTarget += target;
-                totalPerformance += performance;
 
                 const percentage = target > 0 ? (performance / target) * 100 : 0;
+                percentageSum += percentage;
                 if (percentage >= threshold) {
                     summary.passedKPIs++;
                 } else {
@@ -386,7 +385,7 @@
                 }
             });
 
-            summary.averagePercentage = totalTarget > 0 ? Math.round((totalPerformance / totalTarget) * 100) : 0;
+            summary.averagePercentage = data.length > 0 ? Math.round(percentageSum / data.length) : 0;
             return summary;
         }
 
@@ -433,6 +432,17 @@
         function uniqueValues(data, field) {
             return [...new Set(data.map(item => item[field]).filter(v => v && v.toString().trim()))]
                 .sort((a, b) => a.toString().localeCompare(b.toString(), 'th'));
+        }
+
+        function removeDuplicateKPIs(data) {
+            const keyFields = ['ประเด็นขับเคลื่อน','กลุ่มงานย่อย','ตัวชี้วัดหลัก','ตัวชี้วัดย่อย','กลุ่มเป้าหมาย','ชื่อหน่วยบริการ'];
+            const seen = new Set();
+            return data.filter(item => {
+                const key = keyFields.map(f => (item[f] || '').toString()).join('|');
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
         }
 
         function populateServiceFilter() {
@@ -545,16 +555,14 @@
                         count: 0,
                         passed: 0,
                         failed: 0,
-                        totalTarget: 0,
-                        totalPerformance: 0,
+                        percentageSum: 0,
                         averagePercentage: 0
                     };
                 }
 
                 const stat = stats[groupName];
                 stat.count++;
-                stat.totalTarget += target;
-                stat.totalPerformance += performance;
+                stat.percentageSum += percentage;
 
                 if (percentage >= threshold) {
                     stat.passed++;
@@ -564,7 +572,7 @@
             });
 
             Object.values(stats).forEach(stat => {
-                stat.averagePercentage = stat.totalTarget > 0 ? Math.round((stat.totalPerformance / stat.totalTarget) * 100) : 0;
+                stat.averagePercentage = stat.count > 0 ? Math.round(stat.percentageSum / stat.count) : 0;
             });
 
             Object.entries(stats).forEach(([groupName, stat]) => {
