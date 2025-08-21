@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalTableBody = document.getElementById('modal-table-body');
 
   const apiUrl =
-    'https://script.google.com/macros/s/ABCDEFG12345/exec?action=getAllKPIData';
+    'https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec';
 
   async function fetchData() {
     showLoading(true);
