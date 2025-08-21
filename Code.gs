@@ -1,56 +1,46 @@
 // Google Apps Script Backend Code
 // Deploy this as a web app with execute permissions set to "Anyone"
 
-const ContentService = google.script.content
-const SpreadsheetApp = google.script.spreadsheet
-const CacheService = google.script.cache
-const google = {
-  script: {
-    content: ContentService,
-    spreadsheet: SpreadsheetApp,
-    cache: CacheService,
-  },
-}
-
 function doGet(e) {
   const action = e.parameter.action || "getAllKPIData"
+  let result
 
   try {
     switch (action) {
       case "getKPIConfiguration":
-        return ContentService.createTextOutput(JSON.stringify(getKPIConfiguration())).setMimeType(
-          ContentService.MimeType.JSON,
-        )
+        result = getKPIConfiguration()
+        break
 
       case "getSourceSheetData":
         const sheetName = e.parameter.sheetName
-        return ContentService.createTextOutput(JSON.stringify(getSourceSheetData(sheetName))).setMimeType(
-          ContentService.MimeType.JSON,
-        )
+        result = getSourceSheetData(sheetName)
+        break
 
       case "getAllKPIData":
-        return ContentService.createTextOutput(JSON.stringify(getAllKPIData())).setMimeType(
-          ContentService.MimeType.JSON,
-        )
+        result = getAllKPIData()
+        break
 
       case "getKPIByGroup":
         const groupName = e.parameter.groupName
-        return ContentService.createTextOutput(JSON.stringify(getKPIByGroup(groupName))).setMimeType(
-          ContentService.MimeType.JSON,
-        )
+        result = getKPIByGroup(groupName)
+        break
 
       default:
         throw new Error("Invalid action parameter")
     }
   } catch (error) {
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        status: "error",
-        message: error.toString(),
-        timestamp: new Date().toISOString(),
-      }),
-    ).setMimeType(ContentService.MimeType.JSON)
+    result = {
+      status: "error",
+      message: error.toString(),
+      timestamp: new Date().toISOString(),
+    }
   }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type")
 }
 
 function getKPIConfiguration() {
