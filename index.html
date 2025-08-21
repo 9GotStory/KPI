@@ -136,29 +136,41 @@
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
                     <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4 flex-1">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ประเด็นขับเคลื่อน</label>
-                            <select id="groupFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="">ทั้งหมด</option>
-                            </select>
-                        </div>
-                        
-                        <div class="flex-1">
                             <label class="block text-sm font-medium text-gray-700 mb-2">หน่วยบริการ</label>
                             <select id="serviceFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="">ทั้งหมด</option>
                             </select>
                         </div>
-                        
+
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">สถานะ</label>
-                            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ประเด็นขับเคลื่อน</label>
+                            <select id="groupFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="">ทั้งหมด</option>
-                                <option value="passed">ผ่านเกณฑ์</option>
-                                <option value="failed">ไม่ผ่านเกณฑ์</option>
+                            </select>
+                        </div>
+
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ตัวชี้วัดหลัก</label>
+                            <select id="mainFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">ทั้งหมด</option>
+                            </select>
+                        </div>
+
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ตัวชี้วัดย่อย</label>
+                            <select id="subFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">ทั้งหมด</option>
+                            </select>
+                        </div>
+
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">กลุ่มเป้าหมาย</label>
+                            <select id="targetFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">ทั้งหมด</option>
                             </select>
                         </div>
                     </div>
-                    
+
                     <button id="resetFilters" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
                         รีเซ็ต
                     </button>
@@ -275,11 +287,35 @@
             document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
             document.getElementById('retryBtn').addEventListener('click', loadDashboardData);
             document.getElementById('resetFilters').addEventListener('click', resetFilters);
-            
-            // Filter event listeners
-            document.getElementById('groupFilter').addEventListener('change', applyFilters);
-            document.getElementById('serviceFilter').addEventListener('change', applyFilters);
-            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+            // Filter event listeners for dynamic cascading
+            document.getElementById('serviceFilter').addEventListener('change', () => {
+                populateGroupFilter();
+                populateMainFilter();
+                populateSubFilter();
+                populateTargetFilter();
+                applyFilters();
+            });
+
+            document.getElementById('groupFilter').addEventListener('change', () => {
+                populateMainFilter();
+                populateSubFilter();
+                populateTargetFilter();
+                applyFilters();
+            });
+
+            document.getElementById('mainFilter').addEventListener('change', () => {
+                populateSubFilter();
+                populateTargetFilter();
+                applyFilters();
+            });
+
+            document.getElementById('subFilter').addEventListener('change', () => {
+                populateTargetFilter();
+                applyFilters();
+            });
+
+            document.getElementById('targetFilter').addEventListener('change', applyFilters);
             document.getElementById('tableSortBy').addEventListener('change', applyFilters);
             
             // Pagination event listeners
@@ -353,31 +389,108 @@
 
         // Populate filter dropdowns
         function populateFilters() {
-            const groupFilter = document.getElementById('groupFilter');
-            const serviceFilter = document.getElementById('serviceFilter');
-            
-            // Clear existing options (except "ทั้งหมด")
-            groupFilter.innerHTML = '<option value="">ทั้งหมด</option>';
-            serviceFilter.innerHTML = '<option value="">ทั้งหมด</option>';
-            
-            // Populate group filter
-            kpiData.groups.forEach(group => {
-                const option = document.createElement('option');
-                option.value = group;
-                option.textContent = group;
-                groupFilter.appendChild(option);
+            populateServiceFilter();
+            populateGroupFilter();
+            populateMainFilter();
+            populateSubFilter();
+            populateTargetFilter();
+        }
+
+        function uniqueValues(data, field) {
+            return [...new Set(data.map(item => item[field]).filter(v => v && v.toString().trim()))]
+                .sort((a, b) => a.toString().localeCompare(b.toString(), 'th'));
+        }
+
+        function populateServiceFilter() {
+            const select = document.getElementById('serviceFilter');
+            select.innerHTML = '<option value="">ทั้งหมด</option>';
+            uniqueValues(kpiData.configuration, 'ชื่อหน่วยบริการ').forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
             });
-            
-            // Populate service filter
-            const services = [...new Set(kpiData.configuration.map(item => item['ชื่อหน่วยบริการ']))];
-            services.sort().forEach(service => {
-                if (service && service.trim()) {
-                    const option = document.createElement('option');
-                    option.value = service;
-                    option.textContent = service;
-                    serviceFilter.appendChild(option);
-                }
+        }
+
+        function populateGroupFilter() {
+            const select = document.getElementById('groupFilter');
+            const service = document.getElementById('serviceFilter').value;
+            let data = kpiData.configuration;
+            if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
+            select.innerHTML = '<option value="">ทั้งหมด</option>';
+            uniqueValues(data, 'ประเด็นขับเคลื่อน').forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
             });
+            // reset value if not present
+            if (!uniqueValues(data, 'ประเด็นขับเคลื่อน').includes(select.value)) {
+                select.value = '';
+            }
+        }
+
+        function populateMainFilter() {
+            const select = document.getElementById('mainFilter');
+            const service = document.getElementById('serviceFilter').value;
+            const group = document.getElementById('groupFilter').value;
+            let data = kpiData.configuration;
+            if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
+            if (group) data = data.filter(item => item['ประเด็นขับเคลื่อน'] === group);
+            select.innerHTML = '<option value="">ทั้งหมด</option>';
+            uniqueValues(data, 'ตัวชี้วัดหลัก').forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+            });
+            if (!uniqueValues(data, 'ตัวชี้วัดหลัก').includes(select.value)) {
+                select.value = '';
+            }
+        }
+
+        function populateSubFilter() {
+            const select = document.getElementById('subFilter');
+            const service = document.getElementById('serviceFilter').value;
+            const group = document.getElementById('groupFilter').value;
+            const main = document.getElementById('mainFilter').value;
+            let data = kpiData.configuration;
+            if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
+            if (group) data = data.filter(item => item['ประเด็นขับเคลื่อน'] === group);
+            if (main) data = data.filter(item => item['ตัวชี้วัดหลัก'] === main);
+            select.innerHTML = '<option value="">ทั้งหมด</option>';
+            uniqueValues(data, 'ตัวชี้วัดย่อย').forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+            });
+            if (!uniqueValues(data, 'ตัวชี้วัดย่อย').includes(select.value)) {
+                select.value = '';
+            }
+        }
+
+        function populateTargetFilter() {
+            const select = document.getElementById('targetFilter');
+            const service = document.getElementById('serviceFilter').value;
+            const group = document.getElementById('groupFilter').value;
+            const main = document.getElementById('mainFilter').value;
+            const sub = document.getElementById('subFilter').value;
+            let data = kpiData.configuration;
+            if (service) data = data.filter(item => item['ชื่อหน่วยบริการ'] === service);
+            if (group) data = data.filter(item => item['ประเด็นขับเคลื่อน'] === group);
+            if (main) data = data.filter(item => item['ตัวชี้วัดหลัก'] === main);
+            if (sub) data = data.filter(item => item['ตัวชี้วัดย่อย'] === sub);
+            select.innerHTML = '<option value="">ทั้งหมด</option>';
+            uniqueValues(data, 'กลุ่มเป้าหมาย').forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+            });
+            if (!uniqueValues(data, 'กลุ่มเป้าหมาย').includes(select.value)) {
+                select.value = '';
+            }
         }
 
         // Create group cards
@@ -442,27 +555,18 @@
 
         // Apply filters
         function applyFilters() {
-            const groupFilter = document.getElementById('groupFilter').value;
-            const serviceFilter = document.getElementById('serviceFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            
+            const service = document.getElementById('serviceFilter').value;
+            const group = document.getElementById('groupFilter').value;
+            const main = document.getElementById('mainFilter').value;
+            const sub = document.getElementById('subFilter').value;
+            const target = document.getElementById('targetFilter').value;
+
             filteredData = kpiData.configuration.filter(item => {
-                // Group filter
-                if (groupFilter && item['ประเด็นขับเคลื่อน'] !== groupFilter) return false;
-                
-                // Service filter
-                if (serviceFilter && item['ชื่อหน่วยบริการ'] !== serviceFilter) return false;
-                
-                // Status filter
-                if (statusFilter) {
-                    const percentage = parseFloat(item['ร้อยละ (%)']) || 0;
-                    const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
-                    const passed = percentage >= threshold;
-                    
-                    if (statusFilter === 'passed' && !passed) return false;
-                    if (statusFilter === 'failed' && passed) return false;
-                }
-                
+                if (service && item['ชื่อหน่วยบริการ'] !== service) return false;
+                if (group && item['ประเด็นขับเคลื่อน'] !== group) return false;
+                if (main && item['ตัวชี้วัดหลัก'] !== main) return false;
+                if (sub && item['ตัวชี้วัดย่อย'] !== sub) return false;
+                if (target && item['กลุ่มเป้าหมาย'] !== target) return false;
                 return true;
             });
             
@@ -482,16 +586,22 @@
 
         // Reset filters
         function resetFilters() {
-            document.getElementById('groupFilter').value = '';
             document.getElementById('serviceFilter').value = '';
-            document.getElementById('statusFilter').value = '';
+            document.getElementById('groupFilter').value = '';
+            document.getElementById('mainFilter').value = '';
+            document.getElementById('subFilter').value = '';
+            document.getElementById('targetFilter').value = '';
             document.getElementById('tableSortBy').value = 'ร้อยละ (%)';
+            populateFilters();
             applyFilters();
         }
 
         // Filter by group (from card click)
         function filterByGroup(groupName) {
             document.getElementById('groupFilter').value = groupName;
+            populateMainFilter();
+            populateSubFilter();
+            populateTargetFilter();
             applyFilters();
         }
 
