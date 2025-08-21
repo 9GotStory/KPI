@@ -25,8 +25,6 @@ class KPIDashboard {
   }
 
   async loadData() {
-
-
     const url = "https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec"
     const response = await axios.get(url)
     const result = response.data
@@ -39,6 +37,7 @@ class KPIDashboard {
       configuration: result.data.configuration || [],
       sourceData: result.data.sourceData || {},
     }
+
 
       this.data = {
         timestamp: result.timestamp,
@@ -55,20 +54,20 @@ class KPIDashboard {
 
   setupEventListeners() {
     // Filter event listeners
-    document.getElementById("groupFilter").addEventListener("change", () => this.applyFilters())
-    document.getElementById("kpiFilter").addEventListener("change", () => this.applyFilters())
-    document.getElementById("serviceFilter").addEventListener("change", () => this.applyFilters())
-    document.getElementById("resetFilter").addEventListener("click", () => this.resetFilters())
+    document.getElementById("groupFilter").addEventListener("change", () => this.applyFilters());
+    document.getElementById("kpiFilter").addEventListener("change", () => this.applyFilters());
+    document.getElementById("serviceFilter").addEventListener("change", () => this.applyFilters());
+    document.getElementById("resetFilter").addEventListener("click", () => this.resetFilters());
 
     // Modal event listeners
-    document.getElementById("closeModal").addEventListener("click", () => this.closeModal())
+    document.getElementById("closeModal").addEventListener("click", () => this.closeModal());
     document.getElementById("rawDataModal").addEventListener("click", (e) => {
-      if (e.target.id === "rawDataModal") this.closeModal()
-    })
+      if (e.target.id === "rawDataModal") this.closeModal();
+    });
 
     // Pagination event listeners
-    document.getElementById("prevPageMobile").addEventListener("click", () => this.previousPage())
-    document.getElementById("nextPageMobile").addEventListener("click", () => this.nextPage())
+    document.getElementById("prevPageMobile").addEventListener("click", () => this.previousPage());
+    document.getElementById("nextPageMobile").addEventListener("click", () => this.nextPage());
   }
 
   renderDashboard() {
