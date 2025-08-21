@@ -28,6 +28,7 @@ class KPIDashboard {
     try {
       const url = "https://script.google.com/macros/s/AKfycbwTCVRGkFte39699yAHm5d1suYsU9RUFM8mjtoohhj5uBWfHKsRkSI3MVbRJyw4oU_YKQ/exec"
       const res = await fetch(url, { method: "GET", mode: "cors" })
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
