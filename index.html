@@ -223,9 +223,10 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ประเด็นขับเคลื่อน</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ตัวชี้วัดหลัก</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ตัวชี้วัดย่อย</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หน่วยบริการ</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">กลุ่มเป้าหมาย</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หน่วยบริการ</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เป้าหมาย</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผลงาน</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ร้อยละ</th>
@@ -1200,14 +1201,16 @@
 
             const values = [
                 item['ประเด็นขับเคลื่อน'] || '-',
+                item['ตัวชี้วัดหลัก'] || '-',
                 item['ตัวชี้วัดย่อย'] || '-',
-                item['ชื่อหน่วยบริการ'] || '-',
                 item['กลุ่มเป้าหมาย'] || '-',
+                item['ชื่อหน่วยบริการ'] || '-',
                 formatNumber(item['เป้าหมาย']),
                 formatNumber(item['ผลงาน'])
             ];
 
             const classes = [
+                'px-6 py-4 whitespace-nowrap text-sm text-gray-900',
                 'px-6 py-4 whitespace-nowrap text-sm text-gray-900',
                 'px-6 py-4 text-sm text-gray-900',
                 'px-6 py-4 whitespace-nowrap text-sm text-gray-900',
@@ -1235,13 +1238,7 @@
             row.appendChild(progressTd);
 
             const actionTd = document.createElement('td');
-            actionTd.className = 'px-6 py-4 whitespace-nowrap flex gap-2';
-
-            const infoBtn = document.createElement('button');
-            infoBtn.className = 'text-blue-600 hover:text-blue-800';
-            infoBtn.setAttribute('aria-label', 'ดูรายละเอียด');
-            infoBtn.innerHTML = '<i class="fa-solid fa-circle-info w-4 h-4"></i>';
-            infoBtn.addEventListener('click', () => showKPIInfo(item['ประเด็นขับเคลื่อน'] || '', null, null, null, item.kpi_info_id));
+            actionTd.className = 'px-6 py-4 whitespace-nowrap';
 
             const sourceBtn = document.createElement('button');
             sourceBtn.className = 'text-blue-600 hover:text-blue-800';
@@ -1249,7 +1246,6 @@
             sourceBtn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square w-4 h-4"></i>';
             sourceBtn.addEventListener('click', () => showSourceData(item.sheet_source, item.service_code_ref));
 
-            actionTd.appendChild(infoBtn);
             actionTd.appendChild(sourceBtn);
             row.appendChild(actionTd);
 
