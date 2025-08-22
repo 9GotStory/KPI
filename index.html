@@ -689,7 +689,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-semibold text-gray-900 text-lg">${groupName}</h3>
                         <button class="info-btn p-2 bg-blue-100 rounded-full hover:bg-blue-200">
-                            <i class="fa-solid fa-folder text-blue-600 w-5 h-5"></i>
+                            <i class="fa-solid fa-circle-info text-blue-600 w-5 h-5"></i>
                         </button>
                     </div>
                     
@@ -776,7 +776,12 @@
             card.addEventListener('click', () => showSubCards(mainName));
             card.innerHTML = `
                 <div class="p-6">
-                    <h3 class="font-semibold text-gray-900 text-lg mb-4">${mainName}</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900 text-lg">${mainName}</h3>
+                        <button class="info-btn p-2 bg-blue-100 rounded-full hover:bg-blue-200">
+                            <i class="fa-solid fa-circle-info text-blue-600 w-5 h-5"></i>
+                        </button>
+                    </div>
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">จำนวน KPI</span>
@@ -796,6 +801,11 @@
                     </div>
                 </div>
             `;
+            const infoBtn = card.querySelector('.info-btn');
+            infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showKPIInfo(selectedGroup, mainName);
+            });
             return card;
         }
 
@@ -849,7 +859,12 @@
             card.addEventListener('click', () => showTargetCards(subName));
             card.innerHTML = `
                 <div class="p-6">
-                    <h3 class="font-semibold text-gray-900 text-lg mb-4">${subName}</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900 text-lg">${subName}</h3>
+                        <button class="info-btn p-2 bg-blue-100 rounded-full hover:bg-blue-200">
+                            <i class="fa-solid fa-circle-info text-blue-600 w-5 h-5"></i>
+                        </button>
+                    </div>
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">จำนวน KPI</span>
@@ -866,11 +881,14 @@
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="${statusClass} h-2 rounded-full progress-bar" style="width: ${stats.averagePercentage}%"></div>
                         </div>
-
-
                     </div>
                 </div>
             `;
+            const infoBtn = card.querySelector('.info-btn');
+            infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showKPIInfo(selectedGroup, selectedMain, subName);
+            });
             return card;
         }
 
@@ -921,7 +939,12 @@
             card.addEventListener('click', () => selectTargetCard(targetName));
             card.innerHTML = `
                 <div class="p-6">
-                    <h3 class="font-semibold text-gray-900 text-lg mb-4">${targetName}</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900 text-lg">${targetName}</h3>
+                        <button class="info-btn p-2 bg-blue-100 rounded-full hover:bg-blue-200">
+                            <i class="fa-solid fa-circle-info text-blue-600 w-5 h-5"></i>
+                        </button>
+                    </div>
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">จำนวน KPI</span>
@@ -941,6 +964,11 @@
                     </div>
                 </div>
             `;
+            const infoBtn = card.querySelector('.info-btn');
+            infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showKPIInfo(selectedGroup, selectedMain, selectedSub, targetName);
+            });
             return card;
         }
 
@@ -1295,7 +1323,7 @@
         }
 
         // Show KPI info modal
-        async function showKPIInfo(groupName) {
+        async function showKPIInfo(groupName, mainName = null, subName = null, targetName = null) {
             const modal = document.getElementById('kpiInfoModal');
             const content = document.getElementById('kpiInfoContent');
             content.innerHTML = '<div class="flex justify-center py-8"><div class="loading-spinner w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full"></div></div>';
@@ -1305,7 +1333,19 @@
                 const response = await fetch(`${API_URL}?action=getKPIInfoByGroup&param=${encodeURIComponent(groupName)}`);
                 const result = await response.json();
                 if (result.status === 'success') {
-                    content.innerHTML = createKPIInfoContent(result.data);
+                    let data = result.data || {};
+                    if (mainName) {
+                        data = data[mainName] ? { [mainName]: data[mainName] } : {};
+                        if (subName) {
+                            const subData = data[mainName] && data[mainName][subName] ? data[mainName][subName] : undefined;
+                            data = subData ? { [mainName]: { [subName]: subData } } : {};
+                            if (targetName) {
+                                const targetData = subData && subData[targetName] ? subData[targetName] : undefined;
+                                data = targetData ? { [mainName]: { [subName]: { [targetName]: targetData } } } : {};
+                            }
+                        }
+                    }
+                    content.innerHTML = createKPIInfoContent(data);
                 } else {
                     content.innerHTML = `<div class="text-center py-8 text-red-600">เกิดข้อผิดพลาด: ${result.message}</div>`;
                 }
