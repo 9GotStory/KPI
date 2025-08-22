@@ -37,7 +37,7 @@ function doGet(e) {
         result = getKPIByGroup(param);
         break;
       case 'getKPIInfoByGroup':
-        result = getKPIInfoByGroup(param);
+        result = getKPIInfoByGroup(param, e.parameter.kpi_info_id || null);
         break;
       default:
         throw new Error('Invalid API action: ' + action);
@@ -89,12 +89,16 @@ function getKPIConfiguration() {
     
     const headers = data[0];
     const rows = data.slice(1);
-    
+
+    const kpiInfoIdIndex = headers.indexOf('kpi_info_id');
+
     const configuration = rows.map(row => {
       const record = {};
       headers.forEach((header, index) => {
         record[header] = row[index] || '';
       });
+      // Ensure kpi_info_id is always present even if column is missing
+      record.kpi_info_id = kpiInfoIdIndex !== -1 ? (row[kpiInfoIdIndex] || '') : '';
       return record;
     });
     
@@ -285,12 +289,12 @@ function getKPIByGroup(groupName) {
  * @param {string} groupName ชื่อประเด็นขับเคลื่อน
  * @return {Array} ข้อมูล KPI_Info ที่ตรงกับกลุ่ม
  */
-function getKPIInfoByGroup(groupName) {
-  if (!groupName) {
-    throw new Error('กรุณาระบุชื่อประเด็นขับเคลื่อน');
+function getKPIInfoByGroup(groupName, kpiInfoId) {
+  if (!groupName && !kpiInfoId) {
+    throw new Error('กรุณาระบุชื่อประเด็นขับเคลื่อนหรือ kpi_info_id');
   }
 
-  const cacheKey = 'kpi_info_' + groupName;
+  const cacheKey = kpiInfoId ? 'kpi_info_id_' + kpiInfoId : 'kpi_info_' + groupName;
   const cached = getCachedData(cacheKey);
   if (cached) return cached;
 
@@ -309,18 +313,24 @@ function getKPIInfoByGroup(groupName) {
     const headers = data[0];
     const rows = data.slice(1);
 
-    const info = rows
-      .map(row => {
-        const record = {};
-        headers.forEach((header, index) => {
-          record[header] = row[index] || '';
-        });
-        return record;
-      })
-      .filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
+    const info = rows.map(row => {
+      const record = {};
+      headers.forEach((header, index) => {
+        record[header] = row[index] || '';
+      });
+      return record;
+    });
+
+    if (kpiInfoId) {
+      const item = info.find(r => r['kpi_info_id'] == kpiInfoId);
+      setCachedData(cacheKey, item || {});
+      return item || {};
+    }
+
+    const filtered = info.filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
 
     const grouped = {};
-    info.forEach(item => {
+    filtered.forEach(item => {
       const main = item['ตัวชี้วัดหลัก'] || '-';
       const sub = item['ตัวชี้วัดย่อย'] || '-';
       const target = item['กลุ่มเป้าหมาย'] || '-';
