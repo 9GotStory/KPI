@@ -240,8 +240,8 @@
 
                 <!-- Pagination -->
                 <div id="tablePagination" class="px-6 py-3 border-t border-gray-200 bg-gray-50">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
+                    <div class="flex flex-col items-center space-y-2">
+                        <div class="flex items-center justify-center space-x-2">
                             <button id="prevPage" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                                 ก่อนหน้า
                             </button>
@@ -673,7 +673,7 @@
         function createGroupCard(groupName, stats) {
             const passRate = stats.passRate;
             let statusClass;
-            if (stats.averagePercentage > passRate) {
+            if (stats.averagePercentage >= passRate) {
                 statusClass = 'status-passed';
             } else if (stats.averagePercentage > 0) {
                 statusClass = 'status-warning';
