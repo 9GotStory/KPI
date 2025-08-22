@@ -23,6 +23,7 @@
         .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .progress-bar { transition: width 0.8s ease-in-out; }
         .status-passed { background: linear-gradient(135deg, #10b981, #059669); }
+        .status-warning { background: linear-gradient(135deg, #f97316, #ea580c); }
         .status-failed { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .loading-spinner { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -667,7 +668,14 @@
         // Create individual group card
         function createGroupCard(groupName, stats) {
             const passRate = stats.passRate;
-            const statusClass = stats.averagePercentage >= passRate ? 'status-passed' : 'status-failed';
+            let statusClass;
+            if (stats.averagePercentage > passRate) {
+                statusClass = 'status-passed';
+            } else if (stats.averagePercentage > 0) {
+                statusClass = 'status-warning';
+            } else {
+                statusClass = 'status-failed';
+            }
             
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
@@ -694,7 +702,7 @@
                         
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">อัตราผ่าน</span>
-                            <span class="font-semibold text-${stats.averagePercentage >= passRate ? 'green' : 'red'}-600">${passRate}%</span>
+                            <span class="font-semibold">${passRate}%</span>
                         </div>
                         
                         <div class="w-full bg-gray-200 rounded-full h-2">
