@@ -635,13 +635,16 @@
                         passed: 0,
                         failed: 0,
                         percentageSum: 0,
-                        averagePercentage: 0
+                        thresholdSum: 0,
+                        averagePercentage: 0,
+                        passRate: 0
                     };
                 }
 
                 const stat = stats[groupName];
                 stat.count++;
                 stat.percentageSum += percentage;
+                stat.thresholdSum += threshold;
 
                 if (percentage >= threshold) {
                     stat.passed++;
@@ -652,6 +655,7 @@
 
             Object.values(stats).forEach(stat => {
                 stat.averagePercentage = stat.count > 0 ? Math.round(stat.percentageSum / stat.count) : 0;
+                stat.passRate = stat.count > 0 ? Math.round(stat.thresholdSum / stat.count) : 0;
             });
 
             Object.entries(stats).forEach(([groupName, stat]) => {
@@ -662,8 +666,8 @@
 
         // Create individual group card
         function createGroupCard(groupName, stats) {
-            const passRate = stats.count > 0 ? Math.round((stats.passed / stats.count) * 100) : 0;
-            const statusClass = stats.averagePercentage >= 80 ? 'status-passed' : 'status-failed';
+            const passRate = stats.passRate;
+            const statusClass = stats.averagePercentage >= passRate ? 'status-passed' : 'status-failed';
             
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
@@ -690,7 +694,7 @@
                         
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">อัตราผ่าน</span>
-                            <span class="font-semibold text-${passRate >= 80 ? 'green' : 'red'}-600">${passRate}%</span>
+                            <span class="font-semibold text-${stats.averagePercentage >= passRate ? 'green' : 'red'}-600">${passRate}%</span>
                         </div>
                         
                         <div class="w-full bg-gray-200 rounded-full h-2">
@@ -727,11 +731,12 @@
                 const percentage = target > 0 ? (performance / target) * 100 : 0;
 
                 if (!stats[mainName]) {
-                    stats[mainName] = { count: 0, passed: 0, failed: 0, percentageSum: 0, averagePercentage: 0 };
+                    stats[mainName] = { count: 0, passed: 0, failed: 0, percentageSum: 0, thresholdSum: 0, averagePercentage: 0, passRate: 0 };
                 }
                 const stat = stats[mainName];
                 stat.count++;
                 stat.percentageSum += percentage;
+                stat.thresholdSum += threshold;
                 if (percentage >= threshold) {
                     stat.passed++;
                 } else {
@@ -741,6 +746,7 @@
 
             Object.values(stats).forEach(stat => {
                 stat.averagePercentage = stat.count > 0 ? Math.round(stat.percentageSum / stat.count) : 0;
+                stat.passRate = stat.count > 0 ? Math.round(stat.thresholdSum / stat.count) : 0;
             });
 
             Object.entries(stats).forEach(([mainName, stat]) => {
@@ -750,8 +756,8 @@
         }
 
         function createMainCard(mainName, stats) {
-            const passRate = stats.count > 0 ? Math.round((stats.passed / stats.count) * 100) : 0;
-            const statusClass = stats.averagePercentage >= 80 ? 'status-passed' : 'status-failed';
+            const passRate = stats.passRate;
+            const statusClass = stats.averagePercentage >= passRate ? 'status-passed' : 'status-failed';
 
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
@@ -770,7 +776,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">อัตราผ่าน</span>
-                            <span class="font-semibold text-${passRate >= 80 ? 'green' : 'red'}-600">${passRate}%</span>
+                            <span class="font-semibold text-${stats.averagePercentage >= passRate ? 'green' : 'red'}-600">${passRate}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="${statusClass} h-2 rounded-full progress-bar" style="width: ${stats.averagePercentage}%"></div>
@@ -797,12 +803,13 @@
                 const percentage = target > 0 ? (performance / target) * 100 : 0;
 
                 if (!stats[subName]) {
-                    stats[subName] = { count: 0, passed: 0, failed: 0, percentageSum: 0, averagePercentage: 0 };
+                    stats[subName] = { count: 0, passed: 0, failed: 0, percentageSum: 0, thresholdSum: 0, averagePercentage: 0, passRate: 0 };
                 }
                 const stat = stats[subName];
 
                 stat.count++;
                 stat.percentageSum += percentage;
+                stat.thresholdSum += threshold;
                 if (percentage >= threshold) {
                     stat.passed++;
                 } else {
@@ -812,6 +819,7 @@
 
             Object.values(stats).forEach(stat => {
                 stat.averagePercentage = stat.count > 0 ? Math.round(stat.percentageSum / stat.count) : 0;
+                stat.passRate = stat.count > 0 ? Math.round(stat.thresholdSum / stat.count) : 0;
             });
 
             Object.entries(stats).forEach(([subName, stat]) => {
@@ -821,8 +829,8 @@
         }
 
         function createSubCard(subName, stats) {
-            const passRate = stats.count > 0 ? Math.round((stats.passed / stats.count) * 100) : 0;
-            const statusClass = stats.averagePercentage >= 80 ? 'status-passed' : 'status-failed';
+            const passRate = stats.passRate;
+            const statusClass = stats.averagePercentage >= passRate ? 'status-passed' : 'status-failed';
 
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
@@ -841,7 +849,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">อัตราผ่าน</span>
-                            <span class="font-semibold text-${passRate >= 80 ? 'green' : 'red'}-600">${passRate}%</span>
+                            <span class="font-semibold text-${stats.averagePercentage >= passRate ? 'green' : 'red'}-600">${passRate}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="${statusClass} h-2 rounded-full progress-bar" style="width: ${stats.averagePercentage}%"></div>
