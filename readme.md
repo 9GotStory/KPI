@@ -57,6 +57,7 @@ kpi-dashboard/
    - ข้อมูลวันที่
    - sheet_source
    - service_code_ref
+   - kpi_info_id
 
 3. สร้าง Source Data Sheets ตามต้องการ เช่น:
    - "2Q+ กลุ่มโรคเรื้อรัง"
