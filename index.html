@@ -189,6 +189,18 @@
                 <!-- Group cards will be inserted here -->
             </div>
 
+            <!-- Main KPI Cards -->
+            <div id="mainSection" class="hidden mb-8">
+                <button id="backToGroups" class="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">ย้อนกลับ</button>
+                <div id="mainCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <!-- Sub KPI Cards -->
+            <div id="subSection" class="hidden mb-8">
+                <button id="backToMain" class="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">ย้อนกลับ</button>
+                <div id="subCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
             <!-- KPI Detail Table -->
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gray-200">
@@ -355,6 +367,28 @@
             document.getElementById('closeKPIInfo').addEventListener('click', closeKPIInfo);
             document.getElementById('kpiInfoModal').addEventListener('click', function(e) {
                 if (e.target === this) closeKPIInfo();
+            });
+
+            // Back navigation
+            document.getElementById('backToGroups').addEventListener('click', () => {
+                document.getElementById('mainSection').classList.add('hidden');
+                document.getElementById('subSection').classList.add('hidden');
+                document.getElementById('kpiGroups').classList.remove('hidden');
+                document.getElementById('groupFilter').value = '';
+                document.getElementById('mainFilter').value = '';
+                document.getElementById('subFilter').value = '';
+                populateMainFilter();
+                populateSubFilter();
+                populateTargetFilter();
+                applyFilters();
+            });
+
+            document.getElementById('backToMain').addEventListener('click', () => {
+                document.getElementById('subSection').classList.add('hidden');
+                document.getElementById('mainSection').classList.remove('hidden');
+                document.getElementById('subFilter').value = '';
+                populateTargetFilter();
+                applyFilters();
             });
 
             // Close modal on Escape key
@@ -747,6 +781,7 @@
             return card;
         }
 
+
         function createSubCards(data) {
             const container = document.getElementById('kpiGroups');
             container.innerHTML = '';
@@ -755,6 +790,7 @@
             const uniqueData = getUniqueKPIs(data);
             uniqueData.forEach(item => {
                 const subName = item['ตัวชี้วัดย่อย'] || 'ไม่ระบุ';
+
                 const target = parseFloat(item['เป้าหมาย']) || 0;
                 const performance = parseFloat(item['ผลงาน']) || 0;
                 const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
@@ -764,6 +800,7 @@
                     stats[subName] = { count: 0, passed: 0, failed: 0, percentageSum: 0, averagePercentage: 0 };
                 }
                 const stat = stats[subName];
+
                 stat.count++;
                 stat.percentageSum += percentage;
                 if (percentage >= threshold) {
@@ -809,11 +846,14 @@
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="${statusClass} h-2 rounded-full progress-bar" style="width: ${stats.averagePercentage}%"></div>
                         </div>
+
+
                     </div>
                 </div>
             `;
             return card;
         }
+
 
         function showMainCards(groupName) {
             currentLevel = 'main';
@@ -835,16 +875,20 @@
             document.getElementById('groupFilter').value = selectedGroup;
             document.getElementById('mainFilter').value = mainName;
             document.getElementById('subFilter').value = '';
+
             populateSubFilter();
             populateTargetFilter();
             applyFilters();
         }
 
+
         function selectSubCard(subName) {
+
             document.getElementById('subFilter').value = subName;
             populateTargetFilter();
             applyFilters();
         }
+
 
         function navigateBack() {
             if (currentLevel === 'sub') {
