@@ -186,6 +186,18 @@
                 <!-- Group cards will be inserted here -->
             </div>
 
+            <!-- Main KPI Cards -->
+            <div id="mainSection" class="hidden mb-8">
+                <button id="backToGroups" class="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">ย้อนกลับ</button>
+                <div id="mainCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <!-- Sub KPI Cards -->
+            <div id="subSection" class="hidden mb-8">
+                <button id="backToMain" class="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">ย้อนกลับ</button>
+                <div id="subCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
             <!-- KPI Detail Table -->
             <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gray-200">
@@ -343,6 +355,28 @@
             document.getElementById('closeKPIInfo').addEventListener('click', closeKPIInfo);
             document.getElementById('kpiInfoModal').addEventListener('click', function(e) {
                 if (e.target === this) closeKPIInfo();
+            });
+
+            // Back navigation
+            document.getElementById('backToGroups').addEventListener('click', () => {
+                document.getElementById('mainSection').classList.add('hidden');
+                document.getElementById('subSection').classList.add('hidden');
+                document.getElementById('kpiGroups').classList.remove('hidden');
+                document.getElementById('groupFilter').value = '';
+                document.getElementById('mainFilter').value = '';
+                document.getElementById('subFilter').value = '';
+                populateMainFilter();
+                populateSubFilter();
+                populateTargetFilter();
+                applyFilters();
+            });
+
+            document.getElementById('backToMain').addEventListener('click', () => {
+                document.getElementById('subSection').classList.add('hidden');
+                document.getElementById('mainSection').classList.remove('hidden');
+                document.getElementById('subFilter').value = '';
+                populateTargetFilter();
+                applyFilters();
             });
 
             // Close modal on Escape key
@@ -616,7 +650,10 @@
             
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
-            card.addEventListener('click', () => filterByGroup(groupName));
+            card.addEventListener('click', () => {
+                filterByGroup(groupName);
+                showMainCards(groupName);
+            });
             card.innerHTML = `
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -660,6 +697,172 @@
             });
 
             return card;
+        }
+
+        // Show main KPI cards when a group is selected
+        function showMainCards(groupName) {
+            const section = document.getElementById('mainSection');
+            const container = document.getElementById('mainCards');
+            container.innerHTML = '';
+            const groupData = kpiData.configuration.filter(item => item['ประเด็นขับเคลื่อน'] === groupName);
+            const stats = {};
+            const uniqueData = getUniqueKPIs(groupData);
+            uniqueData.forEach(item => {
+                const main = item['ตัวชี้วัดหลัก'] || 'ไม่ระบุ';
+                const target = parseFloat(item['เป้าหมาย']) || 0;
+                const performance = parseFloat(item['ผลงาน']) || 0;
+                const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
+                const percentage = target > 0 ? (performance / target) * 100 : 0;
+                if (!stats[main]) {
+                    stats[main] = { count: 0, passed: 0, failed: 0, percentageSum: 0, averagePercentage: 0 };
+                }
+                const stat = stats[main];
+                stat.count++;
+                stat.percentageSum += percentage;
+                if (percentage >= threshold) {
+                    stat.passed++;
+                } else {
+                    stat.failed++;
+                }
+            });
+            Object.values(stats).forEach(stat => {
+                stat.averagePercentage = stat.count > 0 ? Math.round(stat.percentageSum / stat.count) : 0;
+            });
+            Object.entries(stats).forEach(([main, stat]) => {
+                container.appendChild(createMainCard(groupName, main, stat));
+            });
+            document.getElementById('kpiGroups').classList.add('hidden');
+            document.getElementById('subSection').classList.add('hidden');
+            section.classList.remove('hidden');
+        }
+
+        // Create main KPI card
+        function createMainCard(groupName, mainName, stats) {
+            const passRate = stats.count > 0 ? Math.round((stats.passed / stats.count) * 100) : 0;
+            const statusClass = stats.averagePercentage >= 80 ? 'status-passed' : 'status-failed';
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
+            card.addEventListener('click', () => {
+                filterByMain(mainName);
+                showSubCards(groupName, mainName);
+            });
+            card.innerHTML = `
+                <div class="p-6">
+                    <h3 class="font-semibold text-gray-900 text-lg mb-4">${mainName}</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">จำนวน KPI</span>
+                            <span class="font-semibold">${stats.count}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">ร้อยละเฉลี่ย</span>
+                            <span class="font-semibold">${stats.averagePercentage}%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">อัตราผ่าน</span>
+                            <span class="font-semibold text-${passRate >= 80 ? 'green' : 'red'}-600">${passRate}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="${statusClass} h-2 rounded-full progress-bar" style="width: ${stats.averagePercentage}%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>ผ่าน: ${stats.passed}</span>
+                            <span>ไม่ผ่าน: ${stats.failed}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // Show sub KPI cards
+        function showSubCards(groupName, mainName) {
+            const section = document.getElementById('subSection');
+            const container = document.getElementById('subCards');
+            container.innerHTML = '';
+            const subData = kpiData.configuration.filter(item =>
+                item['ประเด็นขับเคลื่อน'] === groupName && item['ตัวชี้วัดหลัก'] === mainName
+            );
+            const stats = {};
+            const uniqueData = getUniqueKPIs(subData);
+            uniqueData.forEach(item => {
+                const sub = item['ตัวชี้วัดย่อย'] || 'ไม่ระบุ';
+                const target = parseFloat(item['เป้าหมาย']) || 0;
+                const performance = parseFloat(item['ผลงาน']) || 0;
+                const threshold = parseFloat(item['เกณฑ์ผ่าน (%)']) || 0;
+                const percentage = target > 0 ? (performance / target) * 100 : 0;
+                if (!stats[sub]) {
+                    stats[sub] = { count: 0, passed: 0, failed: 0, percentageSum: 0, averagePercentage: 0 };
+                }
+                const stat = stats[sub];
+                stat.count++;
+                stat.percentageSum += percentage;
+                if (percentage >= threshold) {
+                    stat.passed++;
+                } else {
+                    stat.failed++;
+                }
+            });
+            Object.values(stats).forEach(stat => {
+                stat.averagePercentage = stat.count > 0 ? Math.round(stat.percentageSum / stat.count) : 0;
+            });
+            Object.entries(stats).forEach(([sub, stat]) => {
+                container.appendChild(createSubCard(sub, stat));
+            });
+            document.getElementById('mainSection').classList.add('hidden');
+            section.classList.remove('hidden');
+        }
+
+        // Create sub KPI card
+        function createSubCard(subName, stats) {
+            const passRate = stats.count > 0 ? Math.round((stats.passed / stats.count) * 100) : 0;
+            const statusClass = stats.averagePercentage >= 80 ? 'status-passed' : 'status-failed';
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-sm overflow-hidden card-hover cursor-pointer';
+            card.addEventListener('click', () => {
+                filterBySub(subName);
+            });
+            card.innerHTML = `
+                <div class="p-6">
+                    <h3 class="font-semibold text-gray-900 text-lg mb-4">${subName}</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">จำนวน KPI</span>
+                            <span class="font-semibold">${stats.count}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">ร้อยละเฉลี่ย</span>
+                            <span class="font-semibold">${stats.averagePercentage}%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">อัตราผ่าน</span>
+                            <span class="font-semibold text-${passRate >= 80 ? 'green' : 'red'}-600">${passRate}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="${statusClass} h-2 rounded-full progress-bar" style="width: ${stats.averagePercentage}%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>ผ่าน: ${stats.passed}</span>
+                            <span>ไม่ผ่าน: ${stats.failed}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // Filter helpers for card clicks
+        function filterByMain(mainName) {
+            document.getElementById('mainFilter').value = mainName;
+            populateSubFilter();
+            populateTargetFilter();
+            applyFilters();
+        }
+
+        function filterBySub(subName) {
+            document.getElementById('subFilter').value = subName;
+            populateTargetFilter();
+            applyFilters();
         }
 
         // Update selected filter tags
